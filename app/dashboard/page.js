@@ -78,10 +78,10 @@ export default async function DashboardPage() {
           <span className="text-sm font-medium">Flow Studio</span>
         </div>
 
-        <NavItem label="Overview" active />
-        <NavItem label="Requests" />
-        <NavItem label="Files" />
-        <NavItem label="Messages" />
+        <NavItem label="Overview" href="/dashboard" active />
+        <NavItem label="Requests" href="/dashboard" />
+        <NavItem label="Files" href="/dashboard" />
+        <NavItem label="Messages" href="/dashboard/messages" />
 
         <div className="mt-auto flex items-center gap-2 px-2 pt-4">
           <div className="w-6 h-6 rounded-full bg-brand-light flex items-center justify-center text-[10px] font-medium text-brand-dark">
@@ -162,15 +162,16 @@ export default async function DashboardPage() {
   );
 }
 
-function NavItem({ label, active }) {
+function NavItem({ label, href, active }) {
   return (
-    <div
-      className={`text-sm px-2.5 py-2 rounded ${
+    <Link
+      href={href}
+      className={`text-sm px-2.5 py-2 rounded block ${
         active ? "bg-brand-tint text-brand-dark font-medium" : "text-neutral-500"
       }`}
     >
       {label}
-    </div>
+    </Link>
   );
 }
 
