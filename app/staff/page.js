@@ -2,10 +2,9 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "../../lib/supabaseServer";
 import { createAdminClient } from "../../lib/supabaseAdmin";
-import StatusSelect from "./StatusSelect";
-import UploadDeliverable from "./UploadDeliverable";
+import StaffSidebar from "./StaffSidebar";
 
-export default async function StaffPage() {
+export default async function StaffOverviewPage() {
   const supabase = await createClient();
 
   const {
@@ -25,114 +24,78 @@ export default async function StaffPage() {
     redirect("/dashboard");
   }
 
-  // Staff can see every client's requests, so this uses the admin client
-  // rather than the normal RLS-scoped one.
   const admin = createAdminClient();
 
   const { data: requests } = await admin
     .from("requests")
-    .select("id, title, type, status, brief, created_at, delivered_at, file_path, clients(business_name, tier, email)")
+    .select("id, title, status, created_at, clients(business_name, email)")
     .order("created_at", { ascending: false });
 
-  const requestsWithLinks = await Promise.all(
-    (requests ?? []).map(async (r) => {
-      if (!r.file_path) return r;
-      const { data, error } = await admin.storage
-        .from("deliverables")
-        .createSignedUrl(r.file_path, 60 * 60);
-      if (error) {
-        console.error("Signed URL error for", r.file_path, ":", error.message);
-      }
-      // file_path looks like "<requestId>/<timestamp>-<original filename>"
-      const fileName = r.file_path.split("/").pop().replace(/^\d+-/, "");
-      return { ...r, viewUrl: data?.signedUrl ?? null, fileName };
-    })
-  );
+  const { count: clientCount } = await admin
+    .from("clients")
+    .select("id", { count: "exact", head: true });
 
-  const openRequests = requestsWithLinks.filter((r) => r.status !== "delivered");
-  const deliveredRequests = requestsWithLinks.filter((r) => r.status === "delivered");
+  const openCount = requests?.filter((r) => r.status !== "delivered").length ?? 0;
+  const deliveredCount = requests?.filter((r) => r.status === "delivered").length ?? 0;
+  const recent = requests?.slice(0, 5) ?? [];
 
   return (
-    <main className="min-h-screen bg-white px-6 py-10 max-w-4xl mx-auto">
-      <div className="flex items-center gap-2 mb-8">
-        <div className="w-6 h-6 rounded-md bg-brand-dark" />
-        <span className="text-sm font-medium">Flow Studio — Staff</span>
-      </div>
+    <div className="min-h-screen flex bg-white">
+      <StaffSidebar active="Overview" />
 
-      <h1 className="text-xl font-medium mb-1">All requests</h1>
-      <p className="text-sm text-neutral-500 mb-8">
-        Every client's requests in one queue, most recent first.
-      </p>
+      <main className="flex-1 p-8 flex flex-col gap-6 max-w-3xl">
+        <h2 className="text-lg font-medium">Overview</h2>
 
-      <section className="mb-10">
-        <h2 className="text-sm font-medium mb-2">
-          Open ({openRequests.length})
-        </h2>
-        <div className="flex flex-col">
-          {openRequests.length ? (
-            openRequests.map((r) => <RequestRow key={r.id} request={r} />)
-          ) : (
-            <p className="text-sm text-neutral-500 border-t border-neutral-200 py-4">
-              Nothing open right now.
-            </p>
-          )}
+        <div className="grid grid-cols-3 gap-px bg-neutral-200 rounded overflow-hidden">
+          <Stat label="Open requests" value={openCount} />
+          <Stat label="Delivered" value={deliveredCount} />
+          <Stat label="Total clients" value={clientCount ?? "—"} />
         </div>
-      </section>
 
-      <section>
-        <h2 className="text-sm font-medium mb-2">
-          Delivered ({deliveredRequests.length})
-        </h2>
-        <div className="flex flex-col">
-          {deliveredRequests.length ? (
-            deliveredRequests.map((r) => <RequestRow key={r.id} request={r} />)
-          ) : (
-            <p className="text-sm text-neutral-500 border-t border-neutral-200 py-4">
-              Nothing delivered yet.
-            </p>
-          )}
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-sm font-medium">Recent activity</h3>
+            <Link href="/staff/requests" className="text-sm text-brand-dark border border-brand-light rounded px-3 py-1.5">
+              View all requests
+            </Link>
+          </div>
+
+          <div className="flex flex-col">
+            {recent.length ? (
+              recent.map((r) => (
+                <Link
+                  key={r.id}
+                  href={`/staff/requests/${r.id}`}
+                  className="flex items-center justify-between border-t border-neutral-200 py-3 last:border-b hover:bg-neutral-50"
+                >
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium truncate">{r.title}</p>
+                    <p className="text-xs text-neutral-500 mt-0.5">
+                      {r.clients?.business_name ?? r.clients?.email ?? "Unknown client"}
+                    </p>
+                  </div>
+                  <span className="text-xs text-neutral-400 capitalize flex-shrink-0">
+                    {r.status.replace("_", " ")}
+                  </span>
+                </Link>
+              ))
+            ) : (
+              <p className="text-sm text-neutral-500 border-t border-neutral-200 py-4">
+                No requests yet.
+              </p>
+            )}
+          </div>
         </div>
-      </section>
-    </main>
+      </main>
+    </div>
   );
 }
 
-function RequestRow({ request }) {
+function Stat({ label, value }) {
   return (
-    <div className="border-t border-neutral-200 py-3 flex items-start justify-between gap-4 last:border-b">
-      <div className="min-w-0">
-        <Link href={`/staff/requests/${request.id}`} className="text-sm font-medium truncate hover:underline">{request.title}</Link>
-        <p className="text-xs text-neutral-500 mt-0.5">
-          {request.clients?.business_name ?? request.clients?.email ?? "Unknown client"}
-          {" · "}
-          {request.type}
-          {request.clients?.tier ? ` · ${request.clients.tier}` : ""}
-        </p>
-        {request.brief && (
-          <p className="text-xs text-neutral-400 mt-1 line-clamp-2">{request.brief}</p>
-        )}
-        {request.fileName && (
-          <p className="text-xs text-neutral-500 mt-1">
-            📎{" "}
-            {request.viewUrl ? (
-              <a
-                href={request.viewUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="underline"
-              >
-                {request.fileName}
-              </a>
-            ) : (
-              request.fileName
-            )}
-          </p>
-        )}
-      </div>
-      <div className="flex flex-col items-end gap-2 flex-shrink-0">
-        <StatusSelect requestId={request.id} currentStatus={request.status} />
-        <UploadDeliverable requestId={request.id} hasFile={!!request.file_path} />
-      </div>
+    <div className="bg-white p-4 flex items-baseline justify-between gap-2">
+      <p className="text-xs text-neutral-500 whitespace-nowrap">{label}</p>
+      <p className="text-base font-medium whitespace-nowrap">{value}</p>
     </div>
   );
 }
