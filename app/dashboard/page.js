@@ -127,7 +127,7 @@ export default async function DashboardPage() {
                   className="flex items-center justify-between border-t border-neutral-200 py-3 last:border-b"
                 >
                   <div>
-                    <p className="text-sm font-medium">{r.title}</p>
+                    <Link href={`/dashboard/requests/${r.id}`} className="text-sm font-medium hover:underline">{r.title}</Link>
                     <p className="text-xs text-neutral-500 mt-0.5">
                       {r.status === "delivered" ? "Delivered" : "Submitted"}{" "}
                       {formatDate(r.status === "delivered" ? r.delivered_at : r.created_at)}

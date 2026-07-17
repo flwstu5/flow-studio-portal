@@ -76,3 +76,22 @@ export async function uploadDeliverable(requestId, formData) {
 
   revalidatePath("/staff");
 }
+
+export async function sendStaffMessage(requestId, body) {
+  await assertIsStaff();
+
+  const admin = createAdminClient();
+
+  const { error } = await admin.from("messages").insert({
+    request_id: requestId,
+    sender_type: "staff",
+    sender_label: "Flow Studio",
+    body,
+  });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  revalidatePath(`/staff/requests/${requestId}`);
+}

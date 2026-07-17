@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "../../lib/supabaseServer";
 import { createAdminClient } from "../../lib/supabaseAdmin";
@@ -100,7 +101,7 @@ function RequestRow({ request }) {
   return (
     <div className="border-t border-neutral-200 py-3 flex items-start justify-between gap-4 last:border-b">
       <div className="min-w-0">
-        <p className="text-sm font-medium truncate">{request.title}</p>
+        <Link href={`/staff/requests/${request.id}`} className="text-sm font-medium truncate hover:underline">{request.title}</Link>
         <p className="text-xs text-neutral-500 mt-0.5">
           {request.clients?.business_name ?? request.clients?.email ?? "Unknown client"}
           {" · "}
