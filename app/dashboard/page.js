@@ -79,8 +79,8 @@ export default async function DashboardPage() {
         </div>
 
         <NavItem label="Overview" href="/dashboard" active />
-        <NavItem label="Requests" href="/dashboard" />
-        <NavItem label="Files" href="/dashboard" />
+        <NavItem label="Requests" href="/dashboard/requests" />
+        <NavItem label="Files" href="/dashboard/files" />
         <NavItem label="Messages" href="/dashboard/messages" />
 
         <div className="mt-auto flex items-center gap-2 px-2 pt-4">
