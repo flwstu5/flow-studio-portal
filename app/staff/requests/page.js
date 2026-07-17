@@ -30,7 +30,7 @@ export default async function StaffRequestsPage() {
 
   const { data: requests } = await admin
     .from("requests")
-    .select("id, title, type, status, brief, created_at, delivered_at, file_path, clients(business_name, tier, email)")
+    .select("id, title, type, status, brief, created_at, delivered_at, file_path, client_id, clients(business_name, tier, email)")
     .order("created_at", { ascending: false });
 
   const requestsWithLinks = await Promise.all(
@@ -47,63 +47,94 @@ export default async function StaffRequestsPage() {
     })
   );
 
-  const openRequests = requestsWithLinks.filter((r) => r.status !== "delivered");
-  const deliveredRequests = requestsWithLinks.filter((r) => r.status === "delivered");
+  const byClient = new Map();
+  for (const r of requestsWithLinks) {
+    const key = r.client_id ?? "unknown";
+    if (!byClient.has(key)) {
+      byClient.set(key, {
+        businessName: r.clients?.business_name ?? r.clients?.email ?? "Unknown client",
+        tier: r.clients?.tier,
+        requests: [],
+      });
+    }
+    byClient.get(key).requests.push(r);
+  }
+
+  const clientGroups = Array.from(byClient.values()).sort((a, b) => {
+    const aLatest = a.requests[0]?.created_at ?? "";
+    const bLatest = b.requests[0]?.created_at ?? "";
+    return bLatest.localeCompare(aLatest);
+  });
 
   return (
     <div className="min-h-screen flex bg-white">
       <StaffSidebar active="Requests" />
 
-      <main className="flex-1 p-8 max-w-3xl">
+      <main className="flex-1 p-8 max-w-4xl">
         <h2 className="text-lg font-medium mb-1">All requests</h2>
         <p className="text-sm text-neutral-500 mb-8">
-          Every client's requests in one queue, most recent first.
+          Grouped by client, most recently active first.
         </p>
 
-        <section className="mb-10">
-          <h3 className="text-sm font-medium mb-2">
-            Open ({openRequests.length})
-          </h3>
-          <div className="flex flex-col">
-            {openRequests.length ? (
-              openRequests.map((r) => <RequestRow key={r.id} request={r} />)
-            ) : (
-              <p className="text-sm text-neutral-500 border-t border-neutral-200 py-4">
-                Nothing open right now.
-              </p>
-            )}
-          </div>
-        </section>
+        <div className="flex flex-col gap-6">
+          {clientGroups.length ? (
+            clientGroups.map((group, i) => (
+              <div key={i} className="border border-neutral-200 rounded-lg overflow-hidden">
+                <div className="flex items-center justify-between px-4 py-3 bg-neutral-50 border-b border-neutral-200">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium">{group.businessName}</span>
+                    {group.tier && (
+                      <span className="text-xs font-medium px-2 py-0.5 rounded bg-brand-dark text-white capitalize">
+                        {group.tier}
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-xs text-neutral-500">
+                    {group.requests.length} request{group.requests.length === 1 ? "" : "s"}
+                  </span>
+                </div>
 
-        <section>
-          <h3 className="text-sm font-medium mb-2">
-            Delivered ({deliveredRequests.length})
-          </h3>
-          <div className="flex flex-col">
-            {deliveredRequests.length ? (
-              deliveredRequests.map((r) => <RequestRow key={r.id} request={r} />)
-            ) : (
-              <p className="text-sm text-neutral-500 border-t border-neutral-200 py-4">
-                Nothing delivered yet.
-              </p>
-            )}
-          </div>
-        </section>
+                <div className="flex flex-col px-4">
+                  {group.requests.map((r) => (
+                    <RequestRow key={r.id} request={r} />
+                  ))}
+                </div>
+              </div>
+            ))
+          ) : (
+            <p className="text-sm text-neutral-500 border-t border-neutral-200 py-4">
+              No requests yet.
+            </p>
+          )}
+        </div>
       </main>
     </div>
   );
 }
 
+const statusStyles = {
+  submitted: "bg-brand-tint text-brand-dark",
+  in_review: "bg-brand-tint text-brand-dark",
+  delivered: "bg-green-100 text-green-700",
+};
+
+const statusLabels = {
+  submitted: "Submitted",
+  in_review: "In review",
+  delivered: "Delivered",
+};
+
 function RequestRow({ request }) {
   return (
-    <div className="border-t border-neutral-200 py-3 flex items-start justify-between gap-4 last:border-b">
+    <div className="border-t border-neutral-100 py-3 flex items-start justify-between gap-4 first:border-t-0">
       <div className="min-w-0">
         <Link href={`/staff/requests/${request.id}`} className="text-sm font-medium truncate hover:underline">{request.title}</Link>
-        <p className="text-xs text-neutral-500 mt-0.5">
-          {request.clients?.business_name ?? request.clients?.email ?? "Unknown client"}
-          {" · "}
+        <p className="text-xs text-neutral-500 mt-0.5 capitalize">
           {request.type}
-          {request.clients?.tier ? ` · ${request.clients.tier}` : ""}
+          {" · "}
+          <span className={`px-1.5 py-0.5 rounded ${statusStyles[request.status] ?? "bg-neutral-100 text-neutral-600"}`}>
+            {statusLabels[request.status] ?? request.status}
+          </span>
         </p>
         {request.brief && (
           <p className="text-xs text-neutral-400 mt-1 line-clamp-2">{request.brief}</p>
