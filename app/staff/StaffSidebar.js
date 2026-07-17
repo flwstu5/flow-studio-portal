@@ -3,6 +3,7 @@ import Link from "next/link";
 export default function StaffSidebar({ active }) {
   const items = [
     { label: "Overview", href: "/staff" },
+    { label: "Clients", href: "/staff/clients" },
     { label: "Requests", href: "/staff/requests" },
     { label: "Files", href: "/staff/files" },
     { label: "Messages", href: "/staff/messages" },
