@@ -35,12 +35,27 @@ export default function ProfileForm({ currentBusinessName, currentLogoUrl }) {
       const updates = { business_name: businessName };
       if (logoPath) updates.logo_path = logoPath;
 
-      const { error: updateError } = await supabase
+      const { data: existing } = await supabase
         .from("clients")
-        .update(updates)
-        .eq("auth_user_id", user.id);
+        .select("id")
+        .eq("auth_user_id", user.id)
+        .maybeSingle();
 
-      if (updateError) throw updateError;
+      let saveError;
+      if (existing) {
+        const { error } = await supabase.from("clients").update(updates).eq("auth_user_id", user.id);
+        saveError = error;
+      } else {
+        const { error } = await supabase.from("clients").insert({
+          auth_user_id: user.id,
+          email: user.email,
+          client_type: "project",
+          ...updates,
+        });
+        saveError = error;
+      }
+
+      if (saveError) throw saveError;
 
       if (logoPath) {
         const { data } = supabase.storage.from("client-logos").getPublicUrl(logoPath);
