@@ -94,4 +94,23 @@ export async function sendStaffMessage(requestId, body) {
   }
 
   revalidatePath(`/staff/requests/${requestId}`);
+}export async function updateClient(clientId, { businessName, tier }) {
+  await assertIsStaff();
+
+  const admin = createAdminClient();
+
+  const { error } = await admin
+    .from("clients")
+    .update({
+      business_name: businessName || null,
+      tier: tier || null,
+    })
+    .eq("id", clientId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  revalidatePath(`/staff/clients/${clientId}`);
+  revalidatePath("/staff/clients");
 }

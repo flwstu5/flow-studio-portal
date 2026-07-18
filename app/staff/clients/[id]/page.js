@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "../../../../lib/supabaseServer";
 import { createAdminClient } from "../../../../lib/supabaseAdmin";
 import StaffSidebar from "../../StaffSidebar";
+import EditClientForm from "./EditClientForm";
 
 const statusStyles = {
   submitted: "bg-brand-tint text-brand-dark",
@@ -65,13 +66,20 @@ export default async function StaffClientDetailPage({ params }) {
         </Link>
 
         <div className="mt-4 mb-8">
-          <div className="flex items-center gap-2">
-            <h1 className="text-lg font-medium">{client.business_name ?? client.email}</h1>
-            {client.tier && (
-              <span className="text-xs font-medium px-2 py-0.5 rounded bg-brand-dark text-white capitalize">
-                {client.tier}
-              </span>
-            )}
+          <div className="flex items-center gap-2 justify-between">
+            <div className="flex items-center gap-2">
+              <h1 className="text-lg font-medium">{client.business_name ?? client.email}</h1>
+              {client.tier && (
+                <span className="text-xs font-medium px-2 py-0.5 rounded bg-brand-dark text-white capitalize">
+                  {client.tier}
+                </span>
+              )}
+            </div>
+            <EditClientForm
+              clientId={client.id}
+              currentBusinessName={client.business_name}
+              currentTier={client.tier}
+            />
           </div>
           <p className="text-sm text-neutral-500 mt-1">
             {client.email} · {client.client_type === "subscriber" ? "Subscriber" : "Project client"}
