@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "../../../../lib/supabaseServer";
 import { createAdminClient } from "../../../../lib/supabaseAdmin";
 import StaffSidebar from "../../StaffSidebar";
-import EditClientForm from "./editclientform.js";
+import EditClientForm from "./EditClientForm";
 
 const statusStyles = {
   submitted: "bg-brand-tint text-brand-dark",
