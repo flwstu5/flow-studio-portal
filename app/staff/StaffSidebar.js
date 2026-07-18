@@ -12,7 +12,7 @@ export default function StaffSidebar({ active }) {
   return (
     <aside className="w-44 border-r border-neutral-200 p-4 flex flex-col gap-1 flex-shrink-0">
       <div className="flex items-center gap-2 px-2 pb-6">
-        <img src="/logo-icon.png" alt="Flow Studio" className="w-5 h-5 rounded" />
+        <img src="/logo-icon.png" alt="Flow Studio" className="w-9 h-9 rounded" />
         <span className="text-sm font-medium">Flow Studio</span>
       </div>
 
