@@ -47,9 +47,8 @@ export default function LoginPage() {
   return (
     <main className="min-h-screen flex items-center justify-center bg-white px-4">
       <div className="w-full max-w-sm">
-        <div className="flex items-center gap-2 mb-8">
-          <div className="w-6 h-6 rounded-md bg-brand-dark" />
-          <span className="text-sm font-medium">Flow Studio</span>
+        <div className="mb-8">
+          <img src="/logo-full.png" alt="Flow Studio" className="h-12 w-auto" />
         </div>
 
         <h1 className="text-xl font-medium mb-2">Client portal</h1>

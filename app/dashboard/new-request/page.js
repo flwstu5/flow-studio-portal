@@ -10,7 +10,7 @@ export default function NewRequestPage() {
         </Link>
 
         <div className="flex items-center gap-2 mt-4 mb-8">
-          <div className="w-6 h-6 rounded-md bg-brand-dark" />
+          <img src="/logo-icon.png" alt="Flow Studio" className="w-6 h-6 rounded" />
           <span className="text-sm font-medium">Flow Studio</span>
         </div>
 
