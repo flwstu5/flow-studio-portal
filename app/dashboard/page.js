@@ -27,6 +27,8 @@ export default async function DashboardPage() {
     redirect("/login");
   }
 
+  // "clients" row: one per logged-in user, created via the Stripe webhook
+  // (or manually, for early/manual signups) — see supabase/schema.sql
   const { data: client } = await supabase
     .from("clients")
     .select("*")
@@ -39,13 +41,15 @@ export default async function DashboardPage() {
     .eq("client_id", client?.id)
     .order("created_at", { ascending: false });
 
+  // The requests above are already scoped to this client's own rows via
+  // RLS, so it's safe to generate signed download links for their files.
   const admin = createAdminClient();
   const requestsWithLinks = await Promise.all(
     (requests ?? []).map(async (r) => {
       if (!r.file_path) return r;
       const { data, error } = await admin.storage
         .from("deliverables")
-        .createSignedUrl(r.file_path, 60 * 60, { download: true });
+        .createSignedUrl(r.file_path, 60 * 60, { download: true }); // valid 1 hour
       if (error) {
         console.error("Signed URL error for", r.file_path, ":", error.message);
       }
@@ -87,6 +91,9 @@ export default async function DashboardPage() {
             {client?.business_name ?? user.email}
           </span>
         </div>
+        <Link href="/dashboard/profile" className="text-xs text-brand-dark px-2 pb-2 block">
+          Edit business profile
+        </Link>
         <SignOutButton />
       </aside>
 
@@ -131,7 +138,10 @@ export default async function DashboardPage() {
                   </div>
                   <div className="flex items-center gap-3">
                     {r.downloadUrl && (
-                      <a href={r.downloadUrl} className="text-xs font-medium text-brand-dark border border-brand-light rounded px-2.5 py-1">
+                      <a
+                        href={r.downloadUrl}
+                        className="text-xs font-medium text-brand-dark border border-brand-light rounded px-2.5 py-1"
+                      >
                         Download
                       </a>
                     )}
