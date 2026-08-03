@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "../../lib/supabaseClient";
 
 export default function LoginPage() {
-  const [mode, setMode] = useState("signin"); // "signin" | "signup"
+  const [mode, setMode] = useState("signin"); // "signin" | "signup" | "staff"
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [code, setCode] = useState("");
@@ -25,7 +25,7 @@ export default function LoginPage() {
     setCode("");
   }
 
-  // Sign in with a password (fast path for returning users).
+  // Sign in with a password (fast path for returning users and staff).
   async function handlePasswordSignIn(e) {
     e.preventDefault();
     setStatus("sending");
@@ -37,7 +37,7 @@ export default function LoginPage() {
       setStatus("error");
       setErrorMsg("Wrong email or password.");
     } else {
-      router.push("/dashboard");
+      router.push(mode === "staff" ? "/staff" : "/dashboard");
     }
   }
 
@@ -82,8 +82,8 @@ export default function LoginPage() {
       setStatus("idle");
       setStep("set-password");
     } else {
-      // "Forgot password" fallback during sign-in - just get them in.
-      router.push("/dashboard");
+      // "Forgot password" fallback during sign-in or staff login.
+      router.push(mode === "staff" ? "/staff" : "/dashboard");
     }
   }
 
@@ -135,7 +135,55 @@ export default function LoginPage() {
             >
               Sign up
             </button>
+            <button
+              type="button"
+              onClick={() => switchMode("staff")}
+              className={`text-sm px-3 py-1.5 rounded ${
+                mode === "staff" ? "bg-brand-dark text-white" : "text-neutral-500"
+              }`}
+            >
+              Staff
+            </button>
           </div>
+        )}
+
+        {step === "form" && mode === "staff" && (
+          <>
+            <p className="text-sm text-neutral-500 mb-6">Staff login.</p>
+            <form onSubmit={handlePasswordSignIn} className="flex flex-col gap-3">
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@flowstudiogrfx.com"
+                className="border border-neutral-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-light"
+              />
+              <input
+                type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Password"
+                className="border border-neutral-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-light"
+              />
+              <button
+                type="submit"
+                disabled={status === "sending"}
+                className="bg-brand-dark text-white text-sm font-medium rounded px-3 py-2 disabled:opacity-60"
+              >
+                {status === "sending" ? "Signing in…" : "Sign in"}
+              </button>
+              {status === "error" && <p className="text-sm text-red-600">{errorMsg}</p>}
+              <button
+                type="button"
+                onClick={handleSendCode}
+                className="text-xs text-neutral-400 mt-1"
+              >
+                Forgot password? Email me a code instead
+              </button>
+            </form>
+          </>
         )}
 
         {step === "form" && mode === "signin" && (
