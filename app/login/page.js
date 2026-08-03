@@ -76,14 +76,14 @@ export default function LoginPage() {
       return;
     }
 
-    if (mode === "signup") {
-      // Fresh sign-up: let them set a password now, so next time they can
-      // skip the emailed code entirely.
+    if (mode === "signup" || mode === "staff") {
+      // Let them set a password now, so next time they can skip the
+      // emailed code entirely.
       setStatus("idle");
       setStep("set-password");
     } else {
-      // "Forgot password" fallback during sign-in or staff login.
-      router.push(mode === "staff" ? "/staff" : "/dashboard");
+      // "Forgot password" fallback during regular client sign-in.
+      router.push("/dashboard");
     }
   }
 
