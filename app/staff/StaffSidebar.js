@@ -1,4 +1,5 @@
 import Link from "next/link";
+import SignOutButton from "../dashboard/SignOutButton";
 
 export default function StaffSidebar({ active }) {
   const items = [
@@ -29,6 +30,10 @@ export default function StaffSidebar({ active }) {
           {item.label}
         </Link>
       ))}
+
+      <div className="mt-auto">
+        <SignOutButton />
+      </div>
     </aside>
   );
 }

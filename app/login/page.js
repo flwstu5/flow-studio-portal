@@ -98,12 +98,12 @@ export default function LoginPage() {
       setStatus("error");
       setErrorMsg("Couldn't set that password. Try a different one.");
     } else {
-      router.push("/dashboard");
+      router.push(mode === "staff" ? "/staff" : "/dashboard");
     }
   }
 
   function skipPassword() {
-    router.push("/dashboard");
+    router.push(mode === "staff" ? "/staff" : "/dashboard");
   }
 
   return (
