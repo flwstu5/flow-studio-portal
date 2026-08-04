@@ -4,6 +4,7 @@ import { createClient } from "../../../../lib/supabaseServer";
 import { createAdminClient } from "../../../../lib/supabaseAdmin";
 import StaffSidebar from "../../StaffSidebar";
 import EditClientForm from "./EditClientForm";
+import GradeTrend from "../../../dashboard/GradeTrend";
 
 const statusStyles = {
   submitted: "bg-brand-tint text-brand-dark",
@@ -102,7 +103,10 @@ export default async function StaffClientDetailPage({ params }) {
 
         <div className="mb-8">
           <div className="flex items-center justify-between mb-2">
-            <h2 className="text-sm font-medium">Website snapshot</h2>
+            <div className="flex items-center gap-3">
+              <h2 className="text-sm font-medium">Website snapshot</h2>
+              <GradeTrend snapshots={snapshots ?? []} width={90} height={24} />
+            </div>
             {runSnapshotHref ? (
               <a
                 href={runSnapshotHref}

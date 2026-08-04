@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "../../lib/supabaseServer";
 import { createAdminClient } from "../../lib/supabaseAdmin";
 import Sidebar from "./Sidebar";
+import GradeTrend from "./GradeTrend";
 
 const statusStyles = {
   submitted: "bg-[var(--brand-tint)] text-[var(--brand-color)]",
@@ -45,13 +46,14 @@ export default async function DashboardPage() {
     .eq("client_id", client?.id)
     .order("created_at", { ascending: false });
 
-  const { data: snapshot } = await supabase
+  const { data: snapshotHistory } = await supabase
     .from("snapshots")
     .select("*")
     .eq("client_id", client?.id)
     .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+    .limit(10);
+
+  const snapshot = snapshotHistory?.[0] ?? null;
 
   const admin = createAdminClient();
   const requestsWithLinks = await Promise.all(
@@ -110,6 +112,7 @@ export default async function DashboardPage() {
                 </p>
               </div>
             </div>
+            <GradeTrend snapshots={snapshotHistory} />
             <a
               href={`https://www.flowstudiogrfx.com/snapshot?url=${encodeURIComponent(snapshot.url)}&email=${encodeURIComponent(user.email)}&business=${encodeURIComponent(client?.business_name ?? "")}`}
               target="_blank"
