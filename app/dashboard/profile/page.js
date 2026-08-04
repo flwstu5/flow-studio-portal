@@ -37,6 +37,7 @@ export default async function ProfilePage() {
       <ProfileForm
         currentBusinessName={client?.business_name ?? ""}
         currentLogoUrl={logoUrl}
+        currentAccentColor={client?.accent_color ?? ""}
       />
     </main>
   );

@@ -29,7 +29,7 @@ export default function NewRequestPage() {
               type="text"
               required
               placeholder="e.g. Weekend brunch flyer"
-              className="border border-neutral-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-light"
+              className="border border-neutral-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand-light)]"
             />
           </div>
 
@@ -40,7 +40,7 @@ export default function NewRequestPage() {
             <select
               name="type"
               defaultValue="flyer"
-              className="border border-neutral-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-light bg-white"
+              className="border border-neutral-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand-light)] bg-white"
             >
               <option value="flyer">Flyer</option>
               <option value="logo">Logo</option>
@@ -58,13 +58,13 @@ export default function NewRequestPage() {
               required
               rows={5}
               placeholder="What's this for? Include dates, sizes, wording, or anything else we should know."
-              className="border border-neutral-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-light resize-none"
+              className="border border-neutral-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand-light)] resize-none"
             />
           </div>
 
           <button
             type="submit"
-            className="bg-brand-dark text-white text-sm font-medium rounded px-3 py-2.5 mt-2"
+            className="bg-[var(--brand-color)] text-white text-sm font-medium rounded px-3 py-2.5 mt-2"
           >
             Submit request
           </button>

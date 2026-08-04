@@ -2,11 +2,11 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "../../lib/supabaseServer";
 import { createAdminClient } from "../../lib/supabaseAdmin";
-import SignOutButton from "./SignOutButton";
+import Sidebar from "./Sidebar";
 
 const statusStyles = {
-  submitted: "bg-brand-tint text-brand-dark",
-  in_review: "bg-brand-tint text-brand-dark",
+  submitted: "bg-[var(--brand-tint)] text-[var(--brand-color)]",
+  in_review: "bg-[var(--brand-tint)] text-[var(--brand-color)]",
   delivered: "bg-green-100 text-green-700",
 };
 
@@ -73,45 +73,23 @@ export default async function DashboardPage() {
   const openCount = requestsWithLinks?.filter((r) => r.status !== "delivered").length ?? 0;
 
   return (
-    <div className="min-h-screen flex bg-white">
-      <aside className="w-44 border-r border-neutral-200 p-4 flex flex-col gap-1">
-        <div className="flex items-center gap-2 px-2 pb-6">
-          <img src="/logo-icon.png" alt="Flow Studio" className="w-9 h-9 rounded" />
-          <span className="text-sm font-medium">Flow Studio</span>
-        </div>
+    <div className="min-h-screen flex flex-col md:flex-row bg-white">
+      <Sidebar
+        businessName={client?.business_name}
+        userEmail={user.email}
+        logoUrl={clientLogoUrl}
+        showEditProfileLink
+      />
 
-        <NavItem label="Overview" href="/dashboard" active />
-        <NavItem label="Requests" href="/dashboard/requests" />
-        <NavItem label="Files" href="/dashboard/files" />
-        <NavItem label="Messages" href="/dashboard/messages" />
-
-        <div className="mt-auto flex items-center gap-2 px-2 pt-4">
-          {clientLogoUrl ? (
-            <img src={clientLogoUrl} alt="" className="w-6 h-6 rounded-full object-cover" />
-          ) : (
-            <div className="w-6 h-6 rounded-full bg-brand-light flex items-center justify-center text-[10px] font-medium text-brand-dark">
-              {(client?.business_name ?? "?").slice(0, 2).toUpperCase()}
-            </div>
-          )}
-          <span className="text-xs text-neutral-500 truncate">
-            {client?.business_name ?? user.email}
-          </span>
-        </div>
-        <Link href="/dashboard/profile" className="text-xs text-brand-dark px-2 pb-2 block">
-          Edit business profile
-        </Link>
-        <SignOutButton />
-      </aside>
-
-      <main className="flex-1 p-8 flex flex-col gap-6 max-w-3xl">
+      <main className="flex-1 w-full p-4 sm:p-6 md:p-8 flex flex-col gap-6 max-w-3xl">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-medium">Overview</h2>
-          <span className="text-xs font-medium px-3 py-1 rounded bg-brand-dark text-white capitalize">
+          <span className="text-xs font-medium px-3 py-1 rounded bg-[var(--brand-color)] text-white capitalize">
             {client?.tier ?? "No plan"}
           </span>
         </div>
 
-        <div className="grid grid-cols-3 gap-px bg-neutral-200 rounded overflow-hidden">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-px bg-neutral-200 rounded overflow-hidden">
           <Stat label="Flyers used" value={client?.tier ? `${flyersUsed} of ${planLimit(client.tier)}` : "—"} />
           <Stat label="Open requests" value={openCount} />
           <Stat label="Renews" value={client?.renews_at ? formatDate(client.renews_at) : "—"} />
@@ -122,7 +100,7 @@ export default async function DashboardPage() {
             <h3 className="text-sm font-medium">Requests</h3>
             <Link
               href="/dashboard/new-request"
-              className="text-sm text-brand-dark border border-brand-light rounded px-3 py-1.5"
+              className="text-sm text-[var(--brand-color)] border border-[var(--brand-light)] rounded px-3 py-1.5"
             >
               + New request
             </Link>
@@ -144,7 +122,7 @@ export default async function DashboardPage() {
                   </div>
                   <div className="flex items-center gap-3">
                     {r.downloadUrl && (
-                      <a href={r.downloadUrl} className="text-xs font-medium text-brand-dark border border-brand-light rounded px-2.5 py-1">
+                      <a href={r.downloadUrl} className="text-xs font-medium text-[var(--brand-color)] border border-[var(--brand-light)] rounded px-2.5 py-1">
                         Download
                       </a>
                     )}
@@ -165,19 +143,6 @@ export default async function DashboardPage() {
         </div>
       </main>
     </div>
-  );
-}
-
-function NavItem({ label, href, active }) {
-  return (
-    <Link
-      href={href}
-      className={`text-sm px-2.5 py-2 rounded block ${
-        active ? "bg-brand-tint text-brand-dark font-medium" : "text-neutral-500"
-      }`}
-    >
-      {label}
-    </Link>
   );
 }
 

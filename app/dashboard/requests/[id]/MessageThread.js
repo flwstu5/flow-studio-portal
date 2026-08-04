@@ -44,7 +44,7 @@ export default function MessageThread({ requestId, initialMessages, senderType, 
               key={m.id}
               className={`max-w-[85%] rounded px-3 py-2 text-sm ${
                 m.sender_type === senderType
-                  ? "self-end bg-brand-dark text-white ml-auto"
+                  ? "self-end bg-[var(--brand-color)] text-white ml-auto"
                   : "self-start bg-neutral-100 text-neutral-800"
               }`}
             >
@@ -62,12 +62,12 @@ export default function MessageThread({ requestId, initialMessages, senderType, 
           value={body}
           onChange={(e) => setBody(e.target.value)}
           placeholder="Write a message…"
-          className="flex-1 border border-neutral-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-light"
+          className="flex-1 border border-neutral-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand-light)]"
         />
         <button
           type="submit"
           disabled={isPending}
-          className="bg-brand-dark text-white text-sm font-medium rounded px-4 py-2 disabled:opacity-60"
+          className="bg-[var(--brand-color)] text-white text-sm font-medium rounded px-4 py-2 disabled:opacity-60"
         >
           Send
         </button>

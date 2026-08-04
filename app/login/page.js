@@ -9,8 +9,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [code, setCode] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [step, setStep] = useState("form"); // "form" | "code" | "set-password"
+  const [step, setStep] = useState("form"); // "form" | "code"
   const [status, setStatus] = useState("idle"); // idle | sending | error
   const [errorMsg, setErrorMsg] = useState("");
   const router = useRouter();
@@ -58,7 +57,9 @@ export default function LoginPage() {
     }
   }
 
-  // Verify the emailed code.
+  // Verify the emailed code. New client accounts land on /onboarding
+  // automatically (the dashboard gate redirects them there) to set a
+  // password and customize their portal — no separate step needed here.
   async function handleVerifyCode(e) {
     e.preventDefault();
     setStatus("sending");
@@ -76,33 +77,6 @@ export default function LoginPage() {
       return;
     }
 
-    if (mode === "signup" || mode === "staff") {
-      // Let them set a password now, so next time they can skip the
-      // emailed code entirely.
-      setStatus("idle");
-      setStep("set-password");
-    } else {
-      // "Forgot password" fallback during regular client sign-in.
-      router.push("/dashboard");
-    }
-  }
-
-  async function handleSetPassword(e) {
-    e.preventDefault();
-    setStatus("sending");
-    setErrorMsg("");
-
-    const { error } = await supabase.auth.updateUser({ password: newPassword });
-
-    if (error) {
-      setStatus("error");
-      setErrorMsg("Couldn't set that password. Try a different one.");
-    } else {
-      router.push(mode === "staff" ? "/staff" : "/dashboard");
-    }
-  }
-
-  function skipPassword() {
     router.push(mode === "staff" ? "/staff" : "/dashboard");
   }
 
@@ -282,40 +256,6 @@ export default function LoginPage() {
                 className="text-xs text-neutral-400 mt-1"
               >
                 Use a different email
-              </button>
-            </form>
-          </>
-        )}
-
-        {step === "set-password" && (
-          <>
-            <p className="text-sm text-neutral-500 mb-6">
-              You're verified! Set a password so you can sign in instantly next time (optional).
-            </p>
-            <form onSubmit={handleSetPassword} className="flex flex-col gap-3">
-              <input
-                type="password"
-                required
-                minLength={6}
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="Choose a password"
-                className="border border-neutral-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-light"
-              />
-              <button
-                type="submit"
-                disabled={status === "sending"}
-                className="bg-brand-dark text-white text-sm font-medium rounded px-3 py-2 disabled:opacity-60"
-              >
-                {status === "sending" ? "Saving…" : "Set password & continue"}
-              </button>
-              {status === "error" && <p className="text-sm text-red-600">{errorMsg}</p>}
-              <button
-                type="button"
-                onClick={skipPassword}
-                className="text-xs text-neutral-400 mt-1"
-              >
-                Skip for now
               </button>
             </form>
           </>
