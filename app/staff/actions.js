@@ -94,7 +94,7 @@ export async function sendStaffMessage(requestId, body) {
   }
 
   revalidatePath(`/staff/requests/${requestId}`);
-}export async function updateClient(clientId, { businessName, tier }) {
+}export async function updateClient(clientId, { businessName, tier, websiteUrl }) {
   await assertIsStaff();
 
   const admin = createAdminClient();
@@ -104,6 +104,7 @@ export async function sendStaffMessage(requestId, body) {
     .update({
       business_name: businessName || null,
       tier: tier || null,
+      website_url: websiteUrl || null,
     })
     .eq("id", clientId);
 

@@ -3,16 +3,17 @@
 import { useState, useTransition } from "react";
 import { updateClient } from "../../actions";
 
-export default function EditClientForm({ clientId, currentBusinessName, currentTier }) {
+export default function EditClientForm({ clientId, currentBusinessName, currentTier, currentWebsiteUrl }) {
   const [editing, setEditing] = useState(false);
   const [businessName, setBusinessName] = useState(currentBusinessName ?? "");
   const [tier, setTier] = useState(currentTier ?? "");
+  const [websiteUrl, setWebsiteUrl] = useState(currentWebsiteUrl ?? "");
   const [isPending, startTransition] = useTransition();
 
   function handleSave(e) {
     e.preventDefault();
     startTransition(async () => {
-      await updateClient(clientId, { businessName, tier: tier || null });
+      await updateClient(clientId, { businessName, tier: tier || null, websiteUrl: websiteUrl || null });
       setEditing(false);
     });
   }
@@ -46,6 +47,12 @@ export default function EditClientForm({ clientId, currentBusinessName, currentT
         <option value="growth">Growth</option>
         <option value="premium">Premium</option>
       </select>
+      <input
+        value={websiteUrl}
+        onChange={(e) => setWebsiteUrl(e.target.value)}
+        placeholder="Website URL"
+        className="border border-neutral-300 rounded px-2 py-1 text-sm w-40"
+      />
       <button
         type="submit"
         disabled={isPending}

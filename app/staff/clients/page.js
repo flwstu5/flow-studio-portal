@@ -45,6 +45,20 @@ export default async function StaffClientsPage() {
     if (r.status !== "delivered") counts.open += 1;
   }
 
+  const { data: snapshots } = await admin
+    .from("snapshots")
+    .select("client_id, grade_letter, grade_percent, opportunity_count, created_at")
+    .order("created_at", { ascending: false });
+
+  // Keep only the most recent snapshot per client — snapshots are already
+  // ordered newest-first, so the first one seen per client_id wins.
+  const latestSnapshotByClient = new Map();
+  for (const s of snapshots ?? []) {
+    if (!latestSnapshotByClient.has(s.client_id)) {
+      latestSnapshotByClient.set(s.client_id, s);
+    }
+  }
+
   return (
     <div className="min-h-screen flex bg-white">
       <StaffSidebar active="Clients" />
@@ -56,6 +70,7 @@ export default async function StaffClientsPage() {
           {clients?.length ? (
             clients.map((c) => {
               const counts = requestCounts.get(c.id) ?? { total: 0, open: 0 };
+              const snapshot = latestSnapshotByClient.get(c.id);
               return (
                 <Link
                   key={c.id}
@@ -77,9 +92,19 @@ export default async function StaffClientsPage() {
                       {c.email} · {c.client_type === "subscriber" ? "Subscriber" : "Project client"}
                     </p>
                   </div>
-                  <span className="text-xs text-neutral-400 flex-shrink-0">
-                    {counts.open} open · {counts.total} total
-                  </span>
+                  <div className="flex items-center gap-3 flex-shrink-0">
+                    {snapshot && (
+                      <span
+                        className="text-xs font-medium px-2 py-0.5 rounded bg-brand-tint text-brand-dark"
+                        title={`${snapshot.opportunity_count ?? 0} opportunities found`}
+                      >
+                        {snapshot.grade_letter ?? "—"}
+                      </span>
+                    )}
+                    <span className="text-xs text-neutral-400">
+                      {counts.open} open · {counts.total} total
+                    </span>
+                  </div>
                 </Link>
               );
             })

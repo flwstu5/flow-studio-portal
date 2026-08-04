@@ -45,6 +45,14 @@ export default async function DashboardPage() {
     .eq("client_id", client?.id)
     .order("created_at", { ascending: false });
 
+  const { data: snapshot } = await supabase
+    .from("snapshots")
+    .select("*")
+    .eq("client_id", client?.id)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
   const admin = createAdminClient();
   const requestsWithLinks = await Promise.all(
     (requests ?? []).map(async (r) => {
@@ -88,6 +96,30 @@ export default async function DashboardPage() {
             {client?.tier ?? "No plan"}
           </span>
         </div>
+
+        {snapshot && (
+          <div className="border border-neutral-200 rounded p-4 flex items-center justify-between gap-4 flex-wrap">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-full border-2 border-[var(--brand-color)] flex items-center justify-center flex-shrink-0">
+                <span className="text-lg font-semibold text-[var(--brand-color)]">{snapshot.grade_letter ?? "—"}</span>
+              </div>
+              <div>
+                <p className="text-sm font-medium">Website snapshot</p>
+                <p className="text-xs text-neutral-500 mt-0.5">
+                  {snapshot.opportunity_count ?? 0} opportunit{snapshot.opportunity_count === 1 ? "y" : "ies"} found · checked {formatDate(snapshot.created_at)}
+                </p>
+              </div>
+            </div>
+            <a
+              href={`https://www.flowstudiogrfx.com/snapshot?url=${encodeURIComponent(snapshot.url)}&email=${encodeURIComponent(user.email)}&business=${encodeURIComponent(client?.business_name ?? "")}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs font-medium text-[var(--brand-color)] border border-[var(--brand-light)] rounded px-3 py-1.5 flex-shrink-0"
+            >
+              Run a fresh check
+            </a>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-px bg-neutral-200 rounded overflow-hidden">
           <Stat label="Flyers used" value={client?.tier ? `${flyersUsed} of ${planLimit(client.tier)}` : "—"} />

@@ -56,6 +56,18 @@ export default async function StaffClientDetailPage({ params }) {
     .eq("client_id", id)
     .order("created_at", { ascending: false });
 
+  const { data: snapshots } = await admin
+    .from("snapshots")
+    .select("id, url, grade_letter, grade_percent, opportunity_count, created_at")
+    .eq("client_id", id)
+    .order("created_at", { ascending: false });
+
+  const latestSnapshot = snapshots?.[0] ?? null;
+  const snapshotUrl = client.website_url || latestSnapshot?.url || "";
+  const runSnapshotHref = snapshotUrl
+    ? `https://www.flowstudiogrfx.com/snapshot?url=${encodeURIComponent(snapshotUrl)}&email=${encodeURIComponent(client.email)}&business=${encodeURIComponent(client.business_name ?? "")}`
+    : null;
+
   return (
     <div className="min-h-screen flex bg-white">
       <StaffSidebar active="Clients" />
@@ -79,12 +91,56 @@ export default async function StaffClientDetailPage({ params }) {
               clientId={client.id}
               currentBusinessName={client.business_name}
               currentTier={client.tier}
+              currentWebsiteUrl={client.website_url}
             />
           </div>
           <p className="text-sm text-neutral-500 mt-1">
             {client.email} · {client.client_type === "subscriber" ? "Subscriber" : "Project client"}
             {client.renews_at ? ` · Renews ${formatDate(client.renews_at)}` : ""}
           </p>
+        </div>
+
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-sm font-medium">Website snapshot</h2>
+            {runSnapshotHref ? (
+              <a
+                href={runSnapshotHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-brand-dark border border-brand-light rounded px-2.5 py-1"
+              >
+                Run snapshot
+              </a>
+            ) : (
+              <span className="text-xs text-neutral-400">Add a website above to enable</span>
+            )}
+          </div>
+
+          {latestSnapshot ? (
+            <div className="flex flex-col">
+              {snapshots.map((s) => (
+                <div
+                  key={s.id}
+                  className="flex items-center justify-between border-t border-neutral-200 py-3 last:border-b"
+                >
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium truncate">{s.url}</p>
+                    <p className="text-xs text-neutral-500 mt-0.5">
+                      {s.opportunity_count ?? 0} opportunit{s.opportunity_count === 1 ? "y" : "ies"} found · {formatDate(s.created_at)}
+                    </p>
+                  </div>
+                  <span className="text-xs font-medium px-2.5 py-1 rounded bg-brand-tint text-brand-dark flex-shrink-0">
+                    {s.grade_letter ?? "—"} ({s.grade_percent ?? "—"}%)
+                  </span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-neutral-500 border-t border-neutral-200 py-4">
+              No snapshots run yet.
+            </p>
+          )}
         </div>
 
         <h2 className="text-sm font-medium mb-2">Requests</h2>
