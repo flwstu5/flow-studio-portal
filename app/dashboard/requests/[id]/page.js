@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "../../../../lib/supabaseServer";
+import { createAdminClient } from "../../../../lib/supabaseAdmin";
 import MessageThread from "./MessageThread";
 import RatingPrompt from "./RatingPrompt";
 import RevisionRequestButton from "./RevisionRequestButton";
@@ -39,6 +40,28 @@ export default async function RequestDetailPage({ params }) {
     referenceFileName = request.reference_file_path.split("/").pop().replace(/^\d+-/, "");
   }
 
+  const admin = createAdminClient();
+  const { data: fileRows } = await admin
+    .from("request_files")
+    .select("id, file_path, uploaded_at")
+    .eq("request_id", id)
+    .order("uploaded_at", { ascending: true });
+
+  const deliveredFiles = await Promise.all(
+    (fileRows?.length ? fileRows : request.file_path ? [{ id: id, file_path: request.file_path, uploaded_at: request.delivered_at }] : []).map(
+      async (f) => {
+        const { data, error } = await admin.storage
+          .from("deliverables")
+          .createSignedUrl(f.file_path, 60 * 60, { download: true });
+        if (error) {
+          console.error("Signed URL error for", f.file_path, ":", error.message);
+        }
+        const fileName = f.file_path.split("/").pop().replace(/^\d+-/, "");
+        return { id: f.id, fileName, downloadUrl: data?.signedUrl ?? null };
+      }
+    )
+  );
+
   const { data: messages } = await supabase
     .from("messages")
     .select("*")
@@ -65,6 +88,29 @@ export default async function RequestDetailPage({ params }) {
           {referenceFileName && (
             <p className="text-xs text-neutral-500 mt-3">📎 {referenceFileName} attached</p>
           )}
+        </div>
+      )}
+
+      {deliveredFiles.length > 0 && (
+        <div className="border-b border-neutral-200 pb-4 mb-6">
+          <p className="text-xs font-medium text-neutral-500 mb-2">
+            Delivered file{deliveredFiles.length === 1 ? "" : "s"}
+          </p>
+          <div className="flex flex-col gap-1.5">
+            {deliveredFiles.map((f) => (
+              <div key={f.id} className="flex items-center justify-between gap-3">
+                <span className="text-sm text-neutral-700 truncate">📎 {f.fileName}</span>
+                {f.downloadUrl && (
+                  <a
+                    href={f.downloadUrl}
+                    className="text-xs font-medium text-[var(--brand-color)] border border-[var(--brand-light)] rounded px-2.5 py-1 flex-shrink-0"
+                  >
+                    Download
+                  </a>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
       )}
 

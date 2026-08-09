@@ -31,17 +31,39 @@ export default async function StaffRequestsPage() {
     .select("id, title, type, status, brief, created_at, delivered_at, due_date, file_path, assigned_to, client_id, clients(business_name, tier, email)")
     .order("created_at", { ascending: false });
 
+  const requestIds = (requests ?? []).map((r) => r.id);
+  const { data: allFiles } = requestIds.length
+    ? await admin
+        .from("request_files")
+        .select("id, request_id, file_path, uploaded_at")
+        .in("request_id", requestIds)
+        .order("uploaded_at", { ascending: true })
+    : { data: [] };
+
+  const filesByRequest = new Map();
+  for (const f of allFiles ?? []) {
+    if (!filesByRequest.has(f.request_id)) filesByRequest.set(f.request_id, []);
+    filesByRequest.get(f.request_id).push(f);
+  }
+
   const requestsWithLinks = await Promise.all(
     (requests ?? []).map(async (r) => {
-      if (!r.file_path) return r;
-      const { data, error } = await admin.storage
-        .from("deliverables")
-        .createSignedUrl(r.file_path, 60 * 60);
-      if (error) {
-        console.error("Signed URL error for", r.file_path, ":", error.message);
-      }
-      const fileName = r.file_path.split("/").pop().replace(/^\d+-/, "");
-      return { ...r, viewUrl: data?.signedUrl ?? null, fileName };
+      // Fall back to the single file_path if request_files hasn't been
+      // backfilled yet (e.g. the migration hasn't been run).
+      const fileRows = filesByRequest.get(r.id) ?? (r.file_path ? [{ id: r.id, file_path: r.file_path }] : []);
+      const files = await Promise.all(
+        fileRows.map(async (f) => {
+          const { data, error } = await admin.storage
+            .from("deliverables")
+            .createSignedUrl(f.file_path, 60 * 60);
+          if (error) {
+            console.error("Signed URL error for", f.file_path, ":", error.message);
+          }
+          const fileName = f.file_path.split("/").pop().replace(/^\d+-/, "");
+          return { id: f.id, viewUrl: data?.signedUrl ?? null, fileName };
+        })
+      );
+      return { ...r, files };
     })
   );
 

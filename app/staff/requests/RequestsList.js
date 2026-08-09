@@ -148,22 +148,26 @@ function RequestRow({ request }) {
         {request.brief && (
           <p className="text-xs text-neutral-400 mt-1 line-clamp-2">{request.brief}</p>
         )}
-        {request.fileName && (
-          <p className="text-xs text-neutral-500 mt-1">
-            📎{" "}
-            {request.viewUrl ? (
-              <a href={request.viewUrl} target="_blank" rel="noopener noreferrer" className="underline">
-                {request.fileName}
-              </a>
-            ) : (
-              request.fileName
-            )}
-          </p>
+        {request.files?.length > 0 && (
+          <div className="mt-1 flex flex-col gap-0.5">
+            {request.files.map((f) => (
+              <p key={f.id} className="text-xs text-neutral-500">
+                📎{" "}
+                {f.viewUrl ? (
+                  <a href={f.viewUrl} target="_blank" rel="noopener noreferrer" className="underline">
+                    {f.fileName}
+                  </a>
+                ) : (
+                  f.fileName
+                )}
+              </p>
+            ))}
+          </div>
         )}
       </div>
       <div className="flex flex-col items-end gap-2 flex-shrink-0">
         <StatusSelect requestId={request.id} currentStatus={request.status} />
-        <UploadDeliverable requestId={request.id} hasFile={!!request.file_path} />
+        <UploadDeliverable requestId={request.id} hasFile={request.files?.length > 0} />
       </div>
     </div>
   );

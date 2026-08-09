@@ -99,7 +99,22 @@ export async function uploadDeliverable(requestId, formData) {
     throw new Error(updateError.message);
   }
 
+  // Every upload adds to the file list (not a replace) — requests.file_path
+  // above tracks "latest" for anything that only checks for one file, this
+  // table is the full history for the multi-file views.
+  const { error: fileRowError } = await admin.from("request_files").insert({
+    request_id: requestId,
+    file_path: path,
+  });
+
+  if (fileRowError) {
+    console.error("Failed to record request_files row:", fileRowError.message);
+  }
+
   revalidatePath("/staff");
+  revalidatePath(`/staff/requests/${requestId}`);
+  revalidatePath(`/dashboard/requests/${requestId}`);
+  revalidatePath("/dashboard/files");
   await notifyDelivery(admin, requestId);
 }
 

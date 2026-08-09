@@ -23,22 +23,49 @@ export default async function FilesPage() {
 
   const { data: requests } = await supabase
     .from("requests")
-    .select("*")
+    .select("id, title, delivered_at, file_path")
     .eq("client_id", client?.id)
     .not("file_path", "is", null)
     .order("delivered_at", { ascending: false });
 
   const admin = createAdminClient();
+
+  const requestIds = (requests ?? []).map((r) => r.id);
+  const { data: allFiles } = requestIds.length
+    ? await admin
+        .from("request_files")
+        .select("id, request_id, file_path, uploaded_at")
+        .in("request_id", requestIds)
+        .order("uploaded_at", { ascending: false })
+    : { data: [] };
+
+  const filesByRequest = new Map();
+  for (const f of allFiles ?? []) {
+    if (!filesByRequest.has(f.request_id)) filesByRequest.set(f.request_id, []);
+    filesByRequest.get(f.request_id).push(f);
+  }
+
+  // Flatten to one row per file (a request can now have several), falling
+  // back to the request's single file_path if request_files hasn't been
+  // backfilled yet.
+  const fileRows = [];
+  for (const r of requests ?? []) {
+    const rowsForRequest = filesByRequest.get(r.id) ?? (r.file_path ? [{ id: r.id, file_path: r.file_path, uploaded_at: r.delivered_at }] : []);
+    for (const f of rowsForRequest) {
+      fileRows.push({ requestId: r.id, requestTitle: r.title, deliveredAt: f.uploaded_at ?? r.delivered_at, filePath: f.file_path, key: f.id });
+    }
+  }
+
   const filesWithLinks = await Promise.all(
-    (requests ?? []).map(async (r) => {
+    fileRows.map(async (f) => {
       const { data, error } = await admin.storage
         .from("deliverables")
-        .createSignedUrl(r.file_path, 60 * 60, { download: true });
+        .createSignedUrl(f.filePath, 60 * 60, { download: true });
       if (error) {
-        console.error("Signed URL error for", r.file_path, ":", error.message);
+        console.error("Signed URL error for", f.filePath, ":", error.message);
       }
-      const fileName = r.file_path.split("/").pop().replace(/^\d+-/, "");
-      return { ...r, downloadUrl: data?.signedUrl ?? null, fileName };
+      const fileName = f.filePath.split("/").pop().replace(/^\d+-/, "");
+      return { ...f, downloadUrl: data?.signedUrl ?? null, fileName };
     })
   );
 
@@ -51,22 +78,22 @@ export default async function FilesPage() {
 
         <div className="flex flex-col">
           {filesWithLinks.length ? (
-            filesWithLinks.map((r) => (
+            filesWithLinks.map((f) => (
               <div
-                key={r.id}
+                key={f.key}
                 className="flex items-center justify-between border-t border-neutral-200 py-3 last:border-b"
               >
                 <div className="min-w-0">
-                  <Link href={`/dashboard/requests/${r.id}`} className="text-sm font-medium hover:underline">
-                    {r.title}
+                  <Link href={`/dashboard/requests/${f.requestId}`} className="text-sm font-medium hover:underline">
+                    {f.requestTitle}
                   </Link>
                   <p className="text-xs text-neutral-500 mt-0.5 truncate">
-                    📎 {r.fileName} · Delivered {formatDate(r.delivered_at)}
+                    📎 {f.fileName} · Delivered {formatDate(f.deliveredAt)}
                   </p>
                 </div>
-                {r.downloadUrl && (
+                {f.downloadUrl && (
                   <a
-                    href={r.downloadUrl}
+                    href={f.downloadUrl}
                     className="text-xs font-medium text-[var(--brand-color)] border border-[var(--brand-light)] rounded px-2.5 py-1 flex-shrink-0"
                   >
                     Download

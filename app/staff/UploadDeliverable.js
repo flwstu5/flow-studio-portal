@@ -36,7 +36,7 @@ export default function UploadDeliverable({ requestId, hasFile }) {
         onClick={() => inputRef.current?.click()}
         className="text-xs text-brand-dark border border-brand-light rounded px-2 py-1.5 disabled:opacity-60"
       >
-        {isPending ? "Uploading…" : hasFile ? "Replace file" : "Upload file"}
+        {isPending ? "Uploading…" : hasFile ? "Add another file" : "Upload file"}
       </button>
       <input
         ref={inputRef}
