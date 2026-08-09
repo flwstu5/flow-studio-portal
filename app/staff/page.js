@@ -6,6 +6,7 @@ import StaffSidebar from "./StaffSidebar";
 import { TIER_PLANS } from "../dashboard/tierPlans";
 
 const STALE_DAYS = 3;
+const INACTIVITY_DAYS = 30;
 
 export default async function StaffOverviewPage() {
   const supabase = await createClient();
@@ -31,12 +32,12 @@ export default async function StaffOverviewPage() {
 
   const { data: requests } = await admin
     .from("requests")
-    .select("id, title, status, created_at, clients(business_name, email)")
+    .select("id, title, status, created_at, client_id, clients(business_name, email)")
     .order("created_at", { ascending: false });
 
   const { data: subscribers } = await admin
     .from("clients")
-    .select("tier")
+    .select("id, business_name, email, tier")
     .not("tier", "is", null)
     .is("archived_at", null);
 
@@ -65,6 +66,20 @@ export default async function StaffOverviewPage() {
     (r) => r.status !== "delivered" && new Date(r.created_at).getTime() < staleCutoff
   );
 
+  // requests is already ordered newest-first, so the first request seen per
+  // client_id is that client's most recent request.
+  const latestRequestByClient = new Map();
+  for (const r of requests ?? []) {
+    if (r.client_id && !latestRequestByClient.has(r.client_id)) {
+      latestRequestByClient.set(r.client_id, r.created_at);
+    }
+  }
+  const inactivityCutoff = Date.now() - INACTIVITY_DAYS * 24 * 60 * 60 * 1000;
+  const inactive = (subscribers ?? []).filter((s) => {
+    const latest = latestRequestByClient.get(s.id);
+    return !latest || new Date(latest).getTime() < inactivityCutoff;
+  });
+
   return (
     <div className="min-h-screen flex bg-white">
       <StaffSidebar active="Overview" />
@@ -85,6 +100,25 @@ export default async function StaffOverviewPage() {
                   className="text-xs text-amber-700 underline"
                 >
                   {r.title} — {r.clients?.business_name ?? r.clients?.email ?? "Unknown client"}
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {inactive.length > 0 && (
+          <div className="border border-blue-200 bg-blue-50 rounded p-3">
+            <p className="text-sm font-medium text-blue-800">
+              {inactive.length} subscriber{inactive.length === 1 ? "" : "s"} with no request in {INACTIVITY_DAYS}+ days
+            </p>
+            <div className="flex flex-col gap-1 mt-2">
+              {inactive.map((s) => (
+                <Link
+                  key={s.id}
+                  href={`/staff/clients/${s.id}`}
+                  className="text-xs text-blue-700 underline"
+                >
+                  {s.business_name ?? s.email}
                 </Link>
               ))}
             </div>
