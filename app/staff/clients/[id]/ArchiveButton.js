@@ -7,12 +7,18 @@ export default function ArchiveButton({ clientId, archived }) {
   const [isArchived, setIsArchived] = useState(archived);
   const [confirming, setConfirming] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const [error, setError] = useState(null);
 
   function handleClick() {
     if (isArchived) {
+      setError(null);
       startTransition(async () => {
-        await unarchiveClient(clientId);
-        setIsArchived(false);
+        try {
+          await unarchiveClient(clientId);
+          setIsArchived(false);
+        } catch (err) {
+          setError(err.message || "Failed to unarchive — try again.");
+        }
       });
       return;
     }
@@ -22,42 +28,53 @@ export default function ArchiveButton({ clientId, archived }) {
       return;
     }
 
+    setError(null);
     startTransition(async () => {
-      await archiveClient(clientId);
-      setIsArchived(true);
-      setConfirming(false);
+      try {
+        await archiveClient(clientId);
+        setIsArchived(true);
+        setConfirming(false);
+      } catch (err) {
+        setError(err.message || "Failed to archive — try again.");
+      }
     });
   }
 
   if (isArchived) {
     return (
-      <button
-        onClick={handleClick}
-        disabled={isPending}
-        className="text-xs text-brand-dark border border-brand-light rounded px-2.5 py-1 disabled:opacity-60"
-      >
-        {isPending ? "Restoring…" : "Unarchive"}
-      </button>
+      <div className="flex flex-col items-end gap-1">
+        <button
+          onClick={handleClick}
+          disabled={isPending}
+          className="text-xs text-brand-dark border border-brand-light rounded px-2.5 py-1 disabled:opacity-60"
+        >
+          {isPending ? "Restoring…" : "Unarchive"}
+        </button>
+        {error && <p className="text-xs text-red-600">{error}</p>}
+      </div>
     );
   }
 
   return (
-    <div className="flex items-center gap-2">
-      {confirming && (
-        <span className="text-xs text-neutral-500">Sure? History is kept, this just hides them.</span>
-      )}
-      <button
-        onClick={handleClick}
-        disabled={isPending}
-        onBlur={() => setConfirming(false)}
-        className={`text-xs rounded px-2.5 py-1 border disabled:opacity-60 ${
-          confirming
-            ? "text-white bg-red-600 border-red-600"
-            : "text-neutral-500 border-neutral-300"
-        }`}
-      >
-        {isPending ? "Archiving…" : confirming ? "Confirm archive" : "Archive"}
-      </button>
+    <div className="flex flex-col items-end gap-1">
+      <div className="flex items-center gap-2">
+        {confirming && (
+          <span className="text-xs text-neutral-500">Sure? History is kept, this just hides them.</span>
+        )}
+        <button
+          onClick={handleClick}
+          disabled={isPending}
+          onBlur={() => setConfirming(false)}
+          className={`text-xs rounded px-2.5 py-1 border disabled:opacity-60 ${
+            confirming
+              ? "text-white bg-red-600 border-red-600"
+              : "text-neutral-500 border-neutral-300"
+          }`}
+        >
+          {isPending ? "Archiving…" : confirming ? "Confirm archive" : "Archive"}
+        </button>
+      </div>
+      {error && <p className="text-xs text-red-600">{error}</p>}
     </div>
   );
 }

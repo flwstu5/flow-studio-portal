@@ -28,6 +28,14 @@ export default function Sidebar({ businessName, userEmail, logoUrl, showEditProf
 
   const initials = (businessName ?? "?").slice(0, 2).toUpperCase();
 
+  // Exact match for Overview (otherwise it'd match every /dashboard/* page
+  // as a prefix), prefix match for everything else so a detail page like
+  // /dashboard/requests/[id] still highlights "Requests".
+  function isActive(href) {
+    if (href === "/dashboard") return pathname === "/dashboard";
+    return pathname === href || pathname.startsWith(`${href}/`);
+  }
+
   function navLinks(onNavigate) {
     return NAV_ITEMS.map((item) => (
       <Link
@@ -35,7 +43,7 @@ export default function Sidebar({ businessName, userEmail, logoUrl, showEditProf
         href={item.href}
         onClick={onNavigate}
         className={`text-sm px-2.5 py-2 rounded flex items-center justify-between ${
-          pathname === item.href ? "bg-[var(--brand-tint)] text-[var(--brand-color)] font-medium" : "text-neutral-500"
+          isActive(item.href) ? "bg-[var(--brand-tint)] text-[var(--brand-color)] font-medium" : "text-neutral-500"
         }`}
       >
         {item.label}

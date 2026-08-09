@@ -12,31 +12,47 @@ export default function TasksClient({ openTasks, doneTasks }) {
   const [dueDate, setDueDate] = useState("");
   const [showDone, setShowDone] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const [error, setError] = useState(null);
   const router = useRouter();
 
   function handleAdd(e) {
     e.preventDefault();
     if (!title.trim()) return;
+    setError(null);
     startTransition(async () => {
-      await createStaffTask(title, { notes, dueDate });
-      setTitle("");
-      setNotes("");
-      setDueDate("");
-      router.refresh();
+      try {
+        await createStaffTask(title, { notes, dueDate });
+        setTitle("");
+        setNotes("");
+        setDueDate("");
+        router.refresh();
+      } catch (err) {
+        setError(err.message || "Failed to add task — try again.");
+      }
     });
   }
 
   function handleToggle(taskId, done) {
+    setError(null);
     startTransition(async () => {
-      await toggleStaffTask(taskId, done);
-      router.refresh();
+      try {
+        await toggleStaffTask(taskId, done);
+        router.refresh();
+      } catch (err) {
+        setError(err.message || "Failed to update task — try again.");
+      }
     });
   }
 
   function handleDelete(taskId) {
+    setError(null);
     startTransition(async () => {
-      await deleteStaffTask(taskId);
-      router.refresh();
+      try {
+        await deleteStaffTask(taskId);
+        router.refresh();
+      } catch (err) {
+        setError(err.message || "Failed to delete task — try again.");
+      }
     });
   }
 
@@ -71,6 +87,7 @@ export default function TasksClient({ openTasks, doneTasks }) {
         >
           Add task
         </button>
+        {error && <p className="text-xs text-red-600">{error}</p>}
       </form>
 
       <div>

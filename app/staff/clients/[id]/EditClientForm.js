@@ -9,12 +9,18 @@ export default function EditClientForm({ clientId, currentBusinessName, currentT
   const [tier, setTier] = useState(currentTier ?? "");
   const [websiteUrl, setWebsiteUrl] = useState(currentWebsiteUrl ?? "");
   const [isPending, startTransition] = useTransition();
+  const [error, setError] = useState(null);
 
   function handleSave(e) {
     e.preventDefault();
+    setError(null);
     startTransition(async () => {
-      await updateClient(clientId, { businessName, tier: tier || null, websiteUrl: websiteUrl || null });
-      setEditing(false);
+      try {
+        await updateClient(clientId, { businessName, tier: tier || null, websiteUrl: websiteUrl || null });
+        setEditing(false);
+      } catch (err) {
+        setError(err.message || "Failed to save — try again.");
+      }
     });
   }
 
@@ -67,6 +73,7 @@ export default function EditClientForm({ clientId, currentBusinessName, currentT
       >
         Cancel
       </button>
+      {error && <p className="text-xs text-red-600">{error}</p>}
     </form>
   );
 }

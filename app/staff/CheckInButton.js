@@ -6,16 +6,19 @@ import { sendCheckIn } from "./actions";
 export default function CheckInButton({ clientId, alreadySentRecently }) {
   const [sent, setSent] = useState(alreadySentRecently);
   const [isPending, startTransition] = useTransition();
+  const [error, setError] = useState(null);
 
   function handleClick(e) {
     e.preventDefault();
     e.stopPropagation();
+    setError(null);
     startTransition(async () => {
       try {
         await sendCheckIn(clientId);
         setSent(true);
       } catch (err) {
         console.error("Failed to send check-in:", err);
+        setError("Failed to send — try again.");
       }
     });
   }
@@ -25,13 +28,16 @@ export default function CheckInButton({ clientId, alreadySentRecently }) {
   }
 
   return (
-    <button
-      type="button"
-      onClick={handleClick}
-      disabled={isPending}
-      className="text-xs text-blue-700 border border-blue-200 rounded px-2 py-0.5 flex-shrink-0 disabled:opacity-60"
-    >
-      {isPending ? "Sending…" : "Send check-in"}
-    </button>
+    <div className="flex flex-col items-end gap-1 flex-shrink-0">
+      <button
+        type="button"
+        onClick={handleClick}
+        disabled={isPending}
+        className="text-xs text-blue-700 border border-blue-200 rounded px-2 py-0.5 flex-shrink-0 disabled:opacity-60"
+      >
+        {isPending ? "Sending…" : "Send check-in"}
+      </button>
+      {error && <p className="text-xs text-red-600">{error}</p>}
+    </div>
   );
 }

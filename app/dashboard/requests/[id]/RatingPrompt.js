@@ -10,9 +10,11 @@ export default function RatingPrompt({ requestId, initialRating }) {
   const [submitted, setSubmitted] = useState(!!initialRating);
   const [reviewUrl, setReviewUrl] = useState(null);
   const [isPending, startTransition] = useTransition();
+  const [error, setError] = useState(null);
 
   function handleSubmit() {
     if (!rating) return;
+    setError(null);
     startTransition(async () => {
       try {
         const result = await submitRating(requestId, rating, feedback);
@@ -20,6 +22,7 @@ export default function RatingPrompt({ requestId, initialRating }) {
         setSubmitted(true);
       } catch {
         // leave the stars/feedback in place so the client can try again
+        setError("Something went wrong submitting that — try again.");
       }
     });
   }
@@ -80,6 +83,7 @@ export default function RatingPrompt({ requestId, initialRating }) {
           >
             {isPending ? "Submitting…" : "Submit rating"}
           </button>
+          {error && <p className="text-xs text-red-600">{error}</p>}
         </div>
       )}
     </div>

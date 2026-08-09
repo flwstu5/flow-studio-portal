@@ -7,12 +7,14 @@ export default function MessageThread({ requestId, initialMessages, senderType, 
   const [messages, setMessages] = useState(initialMessages);
   const [body, setBody] = useState("");
   const [isPending, startTransition] = useTransition();
+  const [error, setError] = useState(null);
 
   function handleSend(e) {
     e.preventDefault();
     const text = body.trim();
     if (!text) return;
 
+    setError(null);
     startTransition(async () => {
       try {
         await sendClientMessage(requestId, text);
@@ -27,8 +29,9 @@ export default function MessageThread({ requestId, initialMessages, senderType, 
         ]);
         setBody("");
       } catch {
-        // Message will still show up on next page load via revalidation
-        // even if this optimistic update path has an issue.
+        // The send genuinely failed (not saved) — leave the draft in the
+        // input so nothing's lost, and say so instead of failing silently.
+        setError("Message didn't send — try again.");
       }
     });
   }
@@ -72,6 +75,7 @@ export default function MessageThread({ requestId, initialMessages, senderType, 
           Send
         </button>
       </form>
+      {error && <p className="text-xs text-red-600 mt-1">{error}</p>}
     </div>
   );
 }

@@ -7,16 +7,19 @@ export default function StaffMessageThread({ requestId, initialMessages }) {
   const [messages, setMessages] = useState(initialMessages);
   const [body, setBody] = useState("");
   const [isPending, startTransition] = useTransition();
+  const [error, setError] = useState(null);
 
   function handleDelete(messageId) {
     if (typeof messageId !== "string" || !confirm("Delete this message? This can't be undone.")) return;
     const previous = messages;
+    setError(null);
     setMessages((prev) => prev.filter((m) => m.id !== messageId));
     startTransition(async () => {
       try {
         await deleteMessage(messageId, requestId);
       } catch {
         setMessages(previous);
+        setError("Failed to delete that message — try again.");
       }
     });
   }
@@ -26,6 +29,7 @@ export default function StaffMessageThread({ requestId, initialMessages }) {
     const text = body.trim();
     if (!text) return;
 
+    setError(null);
     startTransition(async () => {
       try {
         await sendStaffMessage(requestId, text);
@@ -40,8 +44,9 @@ export default function StaffMessageThread({ requestId, initialMessages }) {
         ]);
         setBody("");
       } catch {
-        // Message will still show up on next page load via revalidation
-        // even if this optimistic update path has an issue.
+        // The send genuinely failed (not saved) — leave the draft in the
+        // input so nothing's lost, and say so instead of failing silently.
+        setError("Message didn't send — try again.");
       }
     });
   }
@@ -96,6 +101,7 @@ export default function StaffMessageThread({ requestId, initialMessages }) {
           Send
         </button>
       </form>
+      {error && <p className="text-xs text-red-600 mt-1">{error}</p>}
     </div>
   );
 }

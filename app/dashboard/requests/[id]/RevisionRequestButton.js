@@ -9,6 +9,7 @@ export default function RevisionRequestButton({ requestId }) {
   const [notes, setNotes] = useState("");
   const [requested, setRequested] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const [error, setError] = useState(null);
   const router = useRouter();
 
   if (requested) {
@@ -33,6 +34,7 @@ export default function RevisionRequestButton({ requestId }) {
 
   function handleSubmit(e) {
     e.preventDefault();
+    setError(null);
     startTransition(async () => {
       try {
         await requestRevision(requestId, notes);
@@ -40,6 +42,7 @@ export default function RevisionRequestButton({ requestId }) {
         router.refresh();
       } catch (err) {
         console.error("Revision request failed:", err);
+        setError("Something went wrong sending that — try again.");
       }
     });
   }
@@ -65,6 +68,7 @@ export default function RevisionRequestButton({ requestId }) {
           Cancel
         </button>
       </div>
+      {error && <p className="text-xs text-red-600">{error}</p>}
     </form>
   );
 }

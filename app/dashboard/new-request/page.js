@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { createRequest } from "./actions";
+import SubmitButton from "./SubmitButton";
 
 const VALID_TYPES = new Set(["flyer", "logo", "brand", "web"]);
 
@@ -99,12 +100,7 @@ export default async function NewRequestPage({ searchParams }) {
             <p className="text-xs text-neutral-400">A logo, inspiration image, or existing flyer to work from.</p>
           </div>
 
-          <button
-            type="submit"
-            className="bg-[var(--brand-color)] text-white text-sm font-medium rounded px-3 py-2.5 mt-2"
-          >
-            Submit request
-          </button>
+          <SubmitButton />
         </form>
       </div>
     </main>
