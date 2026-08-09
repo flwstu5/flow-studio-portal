@@ -87,6 +87,18 @@ export default async function DashboardPage({ searchParams }) {
   const openCount = requestsWithLinks?.filter((r) => r.status !== "delivered").length ?? 0;
   const flyerLimit = planLimit(client?.tier);
 
+  // Simple activation checklist for subscribers still getting set up —
+  // self-dismisses once every item is complete, so it never overstays.
+  const checklist = client?.tier
+    ? [
+        { label: "Add your logo", done: !!client?.logo_path, href: "/dashboard/profile" },
+        { label: "Submit your first request", done: (requestsWithLinks?.length ?? 0) > 0, href: "/dashboard/new-request" },
+        { label: "Get your first flyer delivered", done: requestsWithLinks?.some((r) => r.status === "delivered") ?? false, href: null },
+      ]
+    : [];
+  const checklistDone = checklist.filter((item) => item.done).length;
+  const showChecklist = checklist.length > 0 && checklistDone < checklist.length;
+
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-white">
       <Sidebar
@@ -122,6 +134,40 @@ export default async function DashboardPage({ searchParams }) {
         {billing === "error" && (
           <div className="border border-neutral-200 bg-neutral-50 rounded p-3 text-xs text-neutral-600">
             Something went wrong opening billing. Try again in a moment, or email us.
+          </div>
+        )}
+
+        {showChecklist && (
+          <div className="border border-neutral-200 rounded p-4">
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-sm font-medium">Get set up</p>
+              <span className="text-xs text-neutral-400">{checklistDone} of {checklist.length}</span>
+            </div>
+            <div className="flex flex-col gap-2">
+              {checklist.map((item) => {
+                const row = (
+                  <div className="flex items-center gap-2.5">
+                    <span
+                      className={`w-4 h-4 rounded-full border flex-shrink-0 flex items-center justify-center ${
+                        item.done ? "bg-[var(--brand-color)] border-[var(--brand-color)]" : "border-neutral-300"
+                      }`}
+                    >
+                      {item.done && <span className="text-white text-[10px] leading-none">✓</span>}
+                    </span>
+                    <span className={`text-sm ${item.done ? "text-neutral-400 line-through" : "text-neutral-700"}`}>
+                      {item.label}
+                    </span>
+                  </div>
+                );
+                return item.href && !item.done ? (
+                  <Link key={item.label} href={item.href} className="hover:opacity-70">
+                    {row}
+                  </Link>
+                ) : (
+                  <div key={item.label}>{row}</div>
+                );
+              })}
+            </div>
           </div>
         )}
 
