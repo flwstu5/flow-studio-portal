@@ -5,6 +5,7 @@ import { createAdminClient } from "../../lib/supabaseAdmin";
 import Sidebar from "./Sidebar";
 import GradeTrend from "./GradeTrend";
 import PlanUpgradeCard from "./PlanUpgradeCard";
+import BillingButton from "./BillingButton";
 import { planLimit } from "./tierPlans";
 
 const statusStyles = {
@@ -19,7 +20,8 @@ const statusLabels = {
   delivered: "Delivered",
 };
 
-export default async function DashboardPage() {
+export default async function DashboardPage({ searchParams }) {
+  const { billing } = (await searchParams) ?? {};
   const supabase = await createClient();
 
   const {
@@ -95,12 +97,26 @@ export default async function DashboardPage() {
       />
 
       <main className="flex-1 w-full p-4 sm:p-6 md:p-8 flex flex-col gap-6 max-w-3xl">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-3 flex-wrap">
           <h2 className="text-lg font-medium">Overview</h2>
-          <span className="text-xs font-medium px-3 py-1 rounded bg-[var(--brand-color)] text-white capitalize">
-            {client?.tier ?? "No plan"}
-          </span>
+          <div className="flex items-center gap-2">
+            {client?.tier && <BillingButton />}
+            <span className="text-xs font-medium px-3 py-1 rounded bg-[var(--brand-color)] text-white capitalize">
+              {client?.tier ?? "No plan"}
+            </span>
+          </div>
         </div>
+
+        {billing === "unavailable" && (
+          <div className="border border-neutral-200 bg-neutral-50 rounded p-3 text-xs text-neutral-600">
+            Billing management isn't set up on your account yet — email us and we'll sort it out.
+          </div>
+        )}
+        {billing === "error" && (
+          <div className="border border-neutral-200 bg-neutral-50 rounded p-3 text-xs text-neutral-600">
+            Something went wrong opening billing. Try again in a moment, or email us.
+          </div>
+        )}
 
         {snapshot && (
           <div className="border border-neutral-200 rounded p-4 flex items-center justify-between gap-4 flex-wrap">

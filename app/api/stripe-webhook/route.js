@@ -42,6 +42,9 @@ export async function POST(request) {
   const email = session.customer_details?.email;
   console.log("Customer email:", email);
 
+  const stripeCustomerId = typeof session.customer === "string" ? session.customer : session.customer?.id ?? null;
+  console.log("Stripe customer ID:", stripeCustomerId);
+
   if (!email) {
     console.error("Checkout session had no customer email:", session.id);
     return NextResponse.json({ received: true });
@@ -114,6 +117,7 @@ export async function POST(request) {
         tier,
         business_name: businessName,
         renews_at: renewsAt.toISOString().split("T")[0],
+        ...(stripeCustomerId ? { stripe_customer_id: stripeCustomerId } : {}),
       })
       .eq("id", existing.id);
 
@@ -130,6 +134,7 @@ export async function POST(request) {
       tier,
       client_type: "subscriber",
       renews_at: renewsAt.toISOString().split("T")[0],
+      stripe_customer_id: stripeCustomerId,
     });
 
     if (insertError) {
