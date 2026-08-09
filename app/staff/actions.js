@@ -49,7 +49,7 @@ export async function updateRequestStatus(requestId, newStatus) {
 async function notifyDelivery(admin, requestId) {
   const { data: request } = await admin
     .from("requests")
-    .select("title, clients(email)")
+    .select("title, clients(id, email)")
     .eq("id", requestId)
     .single();
 
@@ -57,6 +57,7 @@ async function notifyDelivery(admin, requestId) {
     await notifyClientOfDelivery({
       requestId,
       requestTitle: request.title,
+      clientId: request.clients?.id,
       clientEmail: request.clients?.email,
     });
   }
@@ -121,7 +122,7 @@ export async function sendStaffMessage(requestId, body) {
 
   const { data: request } = await admin
     .from("requests")
-    .select("title, clients(email)")
+    .select("title, clients(id, email)")
     .eq("id", requestId)
     .single();
 
@@ -129,6 +130,7 @@ export async function sendStaffMessage(requestId, body) {
     await notifyClientOfMessage({
       requestId,
       requestTitle: request.title,
+      clientId: request.clients?.id,
       clientEmail: request.clients?.email,
       body,
     });

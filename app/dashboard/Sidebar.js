@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import SignOutButton from "./SignOutButton";
@@ -10,11 +10,20 @@ const NAV_ITEMS = [
   { label: "Requests", href: "/dashboard/requests" },
   { label: "Files", href: "/dashboard/files" },
   { label: "Messages", href: "/dashboard/messages" },
+  { label: "Notifications", href: "/dashboard/notifications" },
 ];
 
 export default function Sidebar({ businessName, userEmail, logoUrl, showEditProfileLink = false }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    fetch("/api/notifications/unread-count")
+      .then((res) => res.json())
+      .then((data) => setUnreadCount(data.count ?? 0))
+      .catch(() => {});
+  }, [pathname]);
 
   const initials = (businessName ?? "?").slice(0, 2).toUpperCase();
 
@@ -24,11 +33,16 @@ export default function Sidebar({ businessName, userEmail, logoUrl, showEditProf
         key={item.href}
         href={item.href}
         onClick={onNavigate}
-        className={`text-sm px-2.5 py-2 rounded block ${
+        className={`text-sm px-2.5 py-2 rounded flex items-center justify-between ${
           pathname === item.href ? "bg-[var(--brand-tint)] text-[var(--brand-color)] font-medium" : "text-neutral-500"
         }`}
       >
         {item.label}
+        {item.label === "Notifications" && unreadCount > 0 && (
+          <span className="text-[10px] font-medium bg-[var(--brand-color)] text-white rounded-full min-w-[16px] h-4 px-1 flex items-center justify-center flex-shrink-0">
+            {unreadCount > 9 ? "9+" : unreadCount}
+          </span>
+        )}
       </Link>
     ));
   }
