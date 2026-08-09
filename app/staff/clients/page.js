@@ -1,8 +1,8 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "../../../lib/supabaseServer";
 import { createAdminClient } from "../../../lib/supabaseAdmin";
 import StaffSidebar from "../StaffSidebar";
+import ClientsList from "./ClientsList";
 
 export default async function StaffClientsPage() {
   const supabase = await createClient();
@@ -28,7 +28,7 @@ export default async function StaffClientsPage() {
 
   const { data: clients } = await admin
     .from("clients")
-    .select("id, business_name, email, tier, client_type, renews_at")
+    .select("id, business_name, email, tier, client_type, renews_at, archived_at")
     .order("business_name", { ascending: true });
 
   const { data: requests } = await admin
@@ -59,61 +59,25 @@ export default async function StaffClientsPage() {
     }
   }
 
+  const rows = (clients ?? []).map((c) => {
+    const counts = requestCounts.get(c.id) ?? { total: 0, open: 0 };
+    const snapshot = latestSnapshotByClient.get(c.id);
+    return {
+      ...c,
+      openCount: counts.open,
+      totalCount: counts.total,
+      snapshotGrade: snapshot?.grade_letter ?? null,
+      snapshotOpportunityCount: snapshot?.opportunity_count ?? null,
+    };
+  });
+
   return (
     <div className="min-h-screen flex bg-white">
       <StaffSidebar active="Clients" />
 
       <main className="flex-1 p-8 max-w-3xl">
         <h2 className="text-lg font-medium mb-6">Clients</h2>
-
-        <div className="flex flex-col">
-          {clients?.length ? (
-            clients.map((c) => {
-              const counts = requestCounts.get(c.id) ?? { total: 0, open: 0 };
-              const snapshot = latestSnapshotByClient.get(c.id);
-              return (
-                <Link
-                  key={c.id}
-                  href={`/staff/clients/${c.id}`}
-                  className="flex items-center justify-between border-t border-neutral-200 py-3 last:border-b hover:bg-neutral-50"
-                >
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium truncate">
-                        {c.business_name ?? c.email}
-                      </span>
-                      {c.tier && (
-                        <span className="text-xs font-medium px-2 py-0.5 rounded bg-brand-dark text-white capitalize flex-shrink-0">
-                          {c.tier}
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-xs text-neutral-500 mt-0.5 truncate">
-                      {c.email} · {c.client_type === "subscriber" ? "Subscriber" : "Project client"}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-3 flex-shrink-0">
-                    {snapshot && (
-                      <span
-                        className="text-xs font-medium px-2 py-0.5 rounded bg-brand-tint text-brand-dark"
-                        title={`${snapshot.opportunity_count ?? 0} opportunities found`}
-                      >
-                        {snapshot.grade_letter ?? "—"}
-                      </span>
-                    )}
-                    <span className="text-xs text-neutral-400">
-                      {counts.open} open · {counts.total} total
-                    </span>
-                  </div>
-                </Link>
-              );
-            })
-          ) : (
-            <p className="text-sm text-neutral-500 border-t border-neutral-200 py-4">
-              No clients yet.
-            </p>
-          )}
-        </div>
+        <ClientsList clients={rows} />
       </main>
     </div>
   );

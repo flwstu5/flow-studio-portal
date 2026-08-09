@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "../../../lib/supabaseServer";
 import { createAdminClient } from "../../../lib/supabaseAdmin";
 import StaffSidebar from "../StaffSidebar";
+import LeadsList from "./LeadsList";
 
 export default async function StaffLeadsPage() {
   const supabase = await createClient();
@@ -58,40 +59,7 @@ export default async function StaffLeadsPage() {
           <Stat label="Conversion rate" value={`${conversionRate}%`} />
         </div>
 
-        <div className="flex flex-col">
-          {rows.length ? (
-            rows.map((r) => (
-              <div
-                key={r.id}
-                className="flex items-center justify-between border-t border-neutral-200 py-3 last:border-b gap-3"
-              >
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium truncate">{r.business || r.email}</span>
-                    {r.converted && (
-                      <span className="text-xs font-medium px-2 py-0.5 rounded bg-green-100 text-green-700 flex-shrink-0">
-                        Converted
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-xs text-neutral-500 mt-0.5 truncate">
-                    {r.email} · {r.url} · {formatDate(r.created_at)}
-                  </p>
-                </div>
-                <div className="flex items-center gap-3 flex-shrink-0">
-                  <span className="text-xs font-medium px-2.5 py-1 rounded bg-brand-tint text-brand-dark">
-                    {r.grade_letter ?? "—"} ({r.grade_percent ?? "—"}%)
-                  </span>
-                  <span className="text-xs text-neutral-400">{nurtureStage(r)}</span>
-                </div>
-              </div>
-            ))
-          ) : (
-            <p className="text-sm text-neutral-500 border-t border-neutral-200 py-4">
-              No snapshot leads yet.
-            </p>
-          )}
-        </div>
+        <LeadsList leads={rows} />
       </main>
     </div>
   );
@@ -106,13 +74,3 @@ function Stat({ label, value }) {
   );
 }
 
-function nurtureStage(lead) {
-  if (lead.nurture_7day_sent_at) return "7-day sent";
-  if (lead.nurture_3day_sent_at) return "3-day sent";
-  return "New";
-}
-
-function formatDate(value) {
-  if (!value) return "—";
-  return new Date(value).toLocaleDateString("en-US", { month: "short", day: "numeric" });
-}

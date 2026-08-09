@@ -1,12 +1,25 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { sendStaffMessage } from "../../actions";
+import { sendStaffMessage, deleteMessage } from "../../actions";
 
 export default function StaffMessageThread({ requestId, initialMessages }) {
   const [messages, setMessages] = useState(initialMessages);
   const [body, setBody] = useState("");
   const [isPending, startTransition] = useTransition();
+
+  function handleDelete(messageId) {
+    if (typeof messageId !== "string" || !confirm("Delete this message? This can't be undone.")) return;
+    const previous = messages;
+    setMessages((prev) => prev.filter((m) => m.id !== messageId));
+    startTransition(async () => {
+      try {
+        await deleteMessage(messageId, requestId);
+      } catch {
+        setMessages(previous);
+      }
+    });
+  }
 
   function handleSend(e) {
     e.preventDefault();
@@ -42,13 +55,22 @@ export default function StaffMessageThread({ requestId, initialMessages }) {
           messages.map((m) => (
             <div
               key={m.id}
-              className={`max-w-[85%] rounded px-3 py-2 text-sm ${
+              className={`group max-w-[85%] rounded px-3 py-2 text-sm relative ${
                 m.sender_type === "staff"
                   ? "self-end bg-brand-dark text-white ml-auto"
                   : "self-start bg-neutral-100 text-neutral-800"
               }`}
             >
-              <p className="text-[11px] opacity-70 mb-0.5">{m.sender_label}</p>
+              <div className="flex items-start justify-between gap-2">
+                <p className="text-[11px] opacity-70 mb-0.5">{m.sender_label}</p>
+                <button
+                  onClick={() => handleDelete(m.id)}
+                  title="Delete message"
+                  className="text-[11px] opacity-0 group-hover:opacity-70 hover:!opacity-100 flex-shrink-0"
+                >
+                  ✕
+                </button>
+              </div>
               <p className="whitespace-pre-wrap">{m.body}</p>
             </div>
           ))

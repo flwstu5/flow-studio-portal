@@ -4,6 +4,7 @@ import { createClient } from "../../../../lib/supabaseServer";
 import { createAdminClient } from "../../../../lib/supabaseAdmin";
 import StaffSidebar from "../../StaffSidebar";
 import EditClientForm from "./EditClientForm";
+import ArchiveButton from "./ArchiveButton";
 import GradeTrend from "../../../dashboard/GradeTrend";
 
 const statusStyles = {
@@ -87,13 +88,21 @@ export default async function StaffClientDetailPage({ params }) {
                   {client.tier}
                 </span>
               )}
+              {client.archived_at && (
+                <span className="text-xs font-medium px-2 py-0.5 rounded bg-neutral-200 text-neutral-600">
+                  Archived
+                </span>
+              )}
             </div>
-            <EditClientForm
-              clientId={client.id}
-              currentBusinessName={client.business_name}
-              currentTier={client.tier}
-              currentWebsiteUrl={client.website_url}
-            />
+            <div className="flex items-center gap-2">
+              <EditClientForm
+                clientId={client.id}
+                currentBusinessName={client.business_name}
+                currentTier={client.tier}
+                currentWebsiteUrl={client.website_url}
+              />
+              <ArchiveButton clientId={client.id} archived={!!client.archived_at} />
+            </div>
           </div>
           <p className="text-sm text-neutral-500 mt-1">
             {client.email} · {client.client_type === "subscriber" ? "Subscriber" : "Project client"}

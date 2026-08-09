@@ -115,3 +115,54 @@ export async function sendStaffMessage(requestId, body) {
   revalidatePath(`/staff/clients/${clientId}`);
   revalidatePath("/staff/clients");
 }
+
+export async function archiveClient(clientId) {
+  await assertIsStaff();
+
+  const admin = createAdminClient();
+
+  const { error } = await admin
+    .from("clients")
+    .update({ archived_at: new Date().toISOString() })
+    .eq("id", clientId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  revalidatePath(`/staff/clients/${clientId}`);
+  revalidatePath("/staff/clients");
+}
+
+export async function unarchiveClient(clientId) {
+  await assertIsStaff();
+
+  const admin = createAdminClient();
+
+  const { error } = await admin
+    .from("clients")
+    .update({ archived_at: null })
+    .eq("id", clientId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  revalidatePath(`/staff/clients/${clientId}`);
+  revalidatePath("/staff/clients");
+}
+
+export async function deleteMessage(messageId, requestId) {
+  await assertIsStaff();
+
+  const admin = createAdminClient();
+
+  const { error } = await admin.from("messages").delete().eq("id", messageId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  revalidatePath(`/staff/requests/${requestId}`);
+  revalidatePath("/staff/messages");
+}
