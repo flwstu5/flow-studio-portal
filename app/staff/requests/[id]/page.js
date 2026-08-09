@@ -3,6 +3,7 @@ import Link from "next/link";
 import { createClient } from "../../../../lib/supabaseServer";
 import { createAdminClient } from "../../../../lib/supabaseAdmin";
 import StaffMessageThread from "./StaffMessageThread";
+import TestimonialCapture from "./TestimonialCapture";
 
 export default async function StaffRequestDetailPage({ params }) {
   const { id } = await params;
@@ -56,6 +57,12 @@ export default async function StaffRequestDetailPage({ params }) {
     .eq("request_id", id)
     .order("created_at", { ascending: true });
 
+  const { data: testimonial } = await admin
+    .from("testimonials")
+    .select("id, business_name, quote, role, result, published")
+    .eq("request_id", id)
+    .maybeSingle();
+
   return (
     <main className="min-h-screen bg-white px-6 py-8 max-w-2xl mx-auto">
       <Link href="/staff" className="text-xs text-neutral-400">
@@ -81,6 +88,26 @@ export default async function StaffRequestDetailPage({ params }) {
               </a>
             </p>
           )}
+        </div>
+      )}
+
+      {request.rating && (
+        <div className="border-b border-neutral-200 pb-4 mb-6">
+          <p className="text-xs font-medium text-neutral-500 mb-1">
+            Client rating: <span className="text-amber-500">{"★".repeat(request.rating)}</span>
+            <span className="text-neutral-300">{"★".repeat(5 - request.rating)}</span>
+          </p>
+          {request.rating_feedback && (
+            <p className="text-sm text-neutral-700 whitespace-pre-wrap">"{request.rating_feedback}"</p>
+          )}
+          <div className="mt-3">
+            <TestimonialCapture
+              requestId={id}
+              defaultBusinessName={request.clients?.business_name}
+              defaultQuote={request.rating_feedback}
+              existing={testimonial}
+            />
+          </div>
         </div>
       )}
 

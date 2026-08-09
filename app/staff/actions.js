@@ -213,6 +213,65 @@ export async function updateClientNotes(clientId, notes) {
   revalidatePath(`/staff/clients/${clientId}`);
 }
 
+export async function upsertTestimonial(requestId, { businessName, quote, role, result }) {
+  await assertIsStaff();
+
+  const admin = createAdminClient();
+
+  const { data: request } = await admin
+    .from("requests")
+    .select("client_id")
+    .eq("id", requestId)
+    .single();
+
+  if (!request) {
+    throw new Error("Request not found.");
+  }
+
+  const { data: existing } = await admin
+    .from("testimonials")
+    .select("id")
+    .eq("request_id", requestId)
+    .maybeSingle();
+
+  const row = {
+    request_id: requestId,
+    client_id: request.client_id,
+    business_name: businessName,
+    quote,
+    role: role || null,
+    result: result || null,
+    published: true,
+  };
+
+  const { error } = existing
+    ? await admin.from("testimonials").update(row).eq("id", existing.id)
+    : await admin.from("testimonials").insert(row);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  revalidatePath(`/staff/requests/${requestId}`);
+}
+
+export async function setTestimonialPublished(testimonialId, requestId, published) {
+  await assertIsStaff();
+
+  const admin = createAdminClient();
+
+  const { error } = await admin
+    .from("testimonials")
+    .update({ published })
+    .eq("id", testimonialId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  revalidatePath(`/staff/requests/${requestId}`);
+}
+
 export async function deleteMessage(messageId, requestId) {
   await assertIsStaff();
 

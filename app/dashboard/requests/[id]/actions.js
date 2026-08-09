@@ -6,7 +6,7 @@ import { createClient } from "../../../../lib/supabaseServer";
 import { createAdminClient } from "../../../../lib/supabaseAdmin";
 import { notifyStaffOfMessage } from "../../../../lib/notifications";
 
-export async function submitRating(requestId, rating) {
+export async function submitRating(requestId, rating, feedback) {
   const supabase = await createClient();
 
   const {
@@ -33,9 +33,15 @@ export async function submitRating(requestId, rating) {
 
   const admin = createAdminClient();
 
+  const trimmedFeedback = (feedback ?? "").trim();
+
   const { error } = await admin
     .from("requests")
-    .update({ rating, rating_submitted_at: new Date().toISOString() })
+    .update({
+      rating,
+      rating_submitted_at: new Date().toISOString(),
+      rating_feedback: trimmedFeedback || null,
+    })
     .eq("id", requestId)
     .eq("client_id", client.id);
 

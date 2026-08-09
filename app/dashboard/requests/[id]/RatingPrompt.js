@@ -6,17 +6,18 @@ import { submitRating } from "./actions";
 export default function RatingPrompt({ requestId, initialRating }) {
   const [rating, setRating] = useState(initialRating ?? null);
   const [hover, setHover] = useState(0);
+  const [feedback, setFeedback] = useState("");
   const [submitted, setSubmitted] = useState(!!initialRating);
   const [isPending, startTransition] = useTransition();
 
-  function handleRate(value) {
-    setRating(value);
+  function handleSubmit() {
+    if (!rating) return;
     startTransition(async () => {
       try {
-        await submitRating(requestId, value);
+        await submitRating(requestId, rating, feedback);
         setSubmitted(true);
       } catch {
-        // leave the stars selected so the client can try again
+        // leave the stars/feedback in place so the client can try again
       }
     });
   }
@@ -41,7 +42,7 @@ export default function RatingPrompt({ requestId, initialRating }) {
             type="button"
             disabled={isPending}
             onMouseEnter={() => setHover(star)}
-            onClick={() => handleRate(star)}
+            onClick={() => setRating(star)}
             aria-label={`Rate ${star} out of 5`}
             className="text-2xl leading-none disabled:opacity-60"
           >
@@ -49,6 +50,26 @@ export default function RatingPrompt({ requestId, initialRating }) {
           </button>
         ))}
       </div>
+
+      {rating > 0 && (
+        <div className="flex flex-col gap-2 mt-3">
+          <textarea
+            value={feedback}
+            onChange={(e) => setFeedback(e.target.value)}
+            placeholder="Anything you'd like to add? (optional)"
+            rows={2}
+            className="border border-neutral-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand-light)] resize-none"
+          />
+          <button
+            type="button"
+            onClick={handleSubmit}
+            disabled={isPending}
+            className="self-start bg-[var(--brand-color)] text-white text-xs font-medium rounded px-3 py-1.5 disabled:opacity-60"
+          >
+            {isPending ? "Submitting…" : "Submit rating"}
+          </button>
+        </div>
+      )}
     </div>
   );
 }
