@@ -4,6 +4,8 @@ import { createClient } from "../../lib/supabaseServer";
 import { createAdminClient } from "../../lib/supabaseAdmin";
 import Sidebar from "./Sidebar";
 import GradeTrend from "./GradeTrend";
+import PlanUpgradeCard from "./PlanUpgradeCard";
+import { planLimit } from "./tierPlans";
 
 const statusStyles = {
   submitted: "bg-[var(--brand-tint)] text-[var(--brand-color)]",
@@ -81,6 +83,7 @@ export default async function DashboardPage() {
     }).length ?? 0;
 
   const openCount = requestsWithLinks?.filter((r) => r.status !== "delivered").length ?? 0;
+  const flyerLimit = planLimit(client?.tier);
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-white">
@@ -125,10 +128,12 @@ export default async function DashboardPage() {
         )}
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-px bg-neutral-200 rounded overflow-hidden">
-          <Stat label="Flyers used" value={client?.tier ? `${flyersUsed} of ${planLimit(client.tier)}` : "—"} />
+          <Stat label="Flyers used" value={flyerLimit ? `${flyersUsed} of ${flyerLimit}` : "—"} />
           <Stat label="Open requests" value={openCount} />
           <Stat label="Renews" value={client?.renews_at ? formatDate(client.renews_at) : "—"} />
         </div>
+
+        <PlanUpgradeCard tier={client?.tier} flyersUsed={flyersUsed} limit={flyerLimit} />
 
         <div>
           <div className="flex items-center justify-between mb-2">
@@ -188,11 +193,6 @@ function Stat({ label, value }) {
       <p className="text-base font-medium whitespace-nowrap">{value}</p>
     </div>
   );
-}
-
-function planLimit(tier) {
-  const limits = { starter: 2, growth: 4, premium: 8 };
-  return limits[tier?.toLowerCase()] ?? "—";
 }
 
 function formatDate(value) {

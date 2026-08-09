@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "../../../../lib/supabaseServer";
 import MessageThread from "./MessageThread";
+import RatingPrompt from "./RatingPrompt";
 
 export default async function RequestDetailPage({ params }) {
   const { id } = await params;
@@ -56,6 +57,10 @@ export default async function RequestDetailPage({ params }) {
           <p className="text-xs font-medium text-neutral-500 mb-1">Original brief</p>
           <p className="text-sm text-neutral-700 whitespace-pre-wrap">{request.brief}</p>
         </div>
+      )}
+
+      {request.status === "delivered" && (
+        <RatingPrompt requestId={id} initialRating={request.rating} />
       )}
 
       <MessageThread
