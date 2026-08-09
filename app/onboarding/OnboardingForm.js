@@ -22,9 +22,9 @@ export default function OnboardingForm({ businessName: initialName, logoUrl: ini
     e.preventDefault();
     setErrorMsg("");
 
-    if (password.length < 6) {
+    if (password.length < 8) {
       setStatus("error");
-      setErrorMsg("Password needs to be at least 6 characters.");
+      setErrorMsg("Password needs to be at least 8 characters.");
       return;
     }
     if (password !== confirmPassword) {
@@ -92,8 +92,9 @@ export default function OnboardingForm({ businessName: initialName, logoUrl: ini
             <input
               id="new-password"
               type="password"
+              autoComplete="new-password"
               required
-              minLength={6}
+              minLength={8}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Choose a password"
@@ -104,8 +105,9 @@ export default function OnboardingForm({ businessName: initialName, logoUrl: ini
             <input
               id="confirm-password"
               type="password"
+              autoComplete="new-password"
               required
-              minLength={6}
+              minLength={8}
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder="Confirm password"

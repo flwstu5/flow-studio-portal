@@ -22,11 +22,27 @@ export async function middleware(request) {
     }
   );
 
-  await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  // Defense-in-depth: every /staff page already checks STAFF_EMAILS itself
+  // server-side, but centralizing the check here too means a future page
+  // that forgets that check still can't be reached by a non-staff session.
+  if (request.nextUrl.pathname.startsWith("/staff")) {
+    const staffEmails = (process.env.STAFF_EMAILS ?? "")
+      .split(",")
+      .map((e) => e.trim().toLowerCase())
+      .filter(Boolean);
+
+    if (!user || !staffEmails.includes((user.email ?? "").toLowerCase())) {
+      return NextResponse.redirect(new URL("/dashboard", request.url));
+    }
+  }
 
   return response;
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/onboarding/:path*"],
+  matcher: ["/dashboard/:path*", "/onboarding/:path*", "/staff/:path*"],
 };

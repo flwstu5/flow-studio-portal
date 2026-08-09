@@ -129,6 +129,7 @@ export default function LoginPage() {
               <input
                 id="staff-email"
                 type="email"
+                autoComplete="username"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -139,6 +140,7 @@ export default function LoginPage() {
               <input
                 id="staff-password"
                 type="password"
+                autoComplete="current-password"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -172,6 +174,7 @@ export default function LoginPage() {
               <input
                 id="signin-email"
                 type="email"
+                autoComplete="username"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -182,6 +185,7 @@ export default function LoginPage() {
               <input
                 id="signin-password"
                 type="password"
+                autoComplete="current-password"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -217,6 +221,7 @@ export default function LoginPage() {
               <input
                 id="signup-email"
                 type="email"
+                autoComplete="username"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -247,6 +252,7 @@ export default function LoginPage() {
                 type="text"
                 inputMode="numeric"
                 pattern="[0-9]*"
+                autoComplete="one-time-code"
                 required
                 value={code}
                 onChange={(e) => setCode(e.target.value)}
