@@ -45,7 +45,7 @@ export default function RatingPrompt({ requestId, initialRating }) {
             aria-label={`Rate ${star} out of 5`}
             className="text-2xl leading-none disabled:opacity-60"
           >
-            <span style={{ color: (hover || rating || 0) >= star ? "var(--brand-color)" : "#d4d4d4" }}>★</span>
+            <span style={{ color: (hover || rating || 0) >= star ? "var(--brand-color)" : "#737373" }}>★</span>
           </button>
         ))}
       </div>

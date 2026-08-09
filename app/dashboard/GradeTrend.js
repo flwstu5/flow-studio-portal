@@ -22,7 +22,7 @@ export default function GradeTrend({ snapshots, width = 120, height = 32 }) {
 
   return (
     <div className="flex items-center gap-2">
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} className="flex-shrink-0">
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} className="flex-shrink-0" aria-hidden="true" role="img">
         <polyline
           points={coords.join(" ")}
           fill="none"

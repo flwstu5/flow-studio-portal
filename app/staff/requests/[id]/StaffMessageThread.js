@@ -64,9 +64,11 @@ export default function StaffMessageThread({ requestId, initialMessages }) {
               <div className="flex items-start justify-between gap-2">
                 <p className="text-[11px] opacity-70 mb-0.5">{m.sender_label}</p>
                 <button
+                  type="button"
                   onClick={() => handleDelete(m.id)}
+                  aria-label="Delete message"
                   title="Delete message"
-                  className="text-[11px] opacity-0 group-hover:opacity-70 hover:!opacity-100 flex-shrink-0"
+                  className="text-[11px] opacity-0 group-hover:opacity-70 hover:!opacity-100 focus:opacity-100 focus:outline-none focus:ring-1 focus:ring-current rounded flex-shrink-0"
                 >
                   ✕
                 </button>

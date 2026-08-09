@@ -61,8 +61,9 @@ function Toggle({ label, checked, onChange }) {
         type="button"
         role="switch"
         aria-checked={checked}
+        aria-label={label}
         onClick={() => onChange(!checked)}
-        className={`relative w-9 h-5 rounded-full flex-shrink-0 transition-colors ${
+        className={`relative w-9 h-5 rounded-full flex-shrink-0 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[var(--brand-color)] ${
           checked ? "bg-[var(--brand-color)]" : "bg-neutral-300"
         }`}
       >

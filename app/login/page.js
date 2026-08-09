@@ -125,7 +125,9 @@ export default function LoginPage() {
           <>
             <p className="text-sm text-neutral-500 mb-6">Staff login.</p>
             <form onSubmit={handlePasswordSignIn} className="flex flex-col gap-3">
+              <label htmlFor="staff-email" className="sr-only">Email</label>
               <input
+                id="staff-email"
                 type="email"
                 required
                 value={email}
@@ -133,7 +135,9 @@ export default function LoginPage() {
                 placeholder="you@flowstudiogrfx.com"
                 className="border border-neutral-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-light"
               />
+              <label htmlFor="staff-password" className="sr-only">Password</label>
               <input
+                id="staff-password"
                 type="password"
                 required
                 value={password}
@@ -164,7 +168,9 @@ export default function LoginPage() {
           <>
             <p className="text-sm text-neutral-500 mb-6">Welcome back — sign in with your password.</p>
             <form onSubmit={handlePasswordSignIn} className="flex flex-col gap-3">
+              <label htmlFor="signin-email" className="sr-only">Email</label>
               <input
+                id="signin-email"
                 type="email"
                 required
                 value={email}
@@ -172,7 +178,9 @@ export default function LoginPage() {
                 placeholder="you@business.com"
                 className="border border-neutral-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-light"
               />
+              <label htmlFor="signin-password" className="sr-only">Password</label>
               <input
+                id="signin-password"
                 type="password"
                 required
                 value={password}
@@ -205,7 +213,9 @@ export default function LoginPage() {
               New here? Enter your email and we'll send you a one-time code to get started.
             </p>
             <form onSubmit={handleSendCode} className="flex flex-col gap-3">
+              <label htmlFor="signup-email" className="sr-only">Email</label>
               <input
+                id="signup-email"
                 type="email"
                 required
                 value={email}
@@ -231,7 +241,9 @@ export default function LoginPage() {
               Enter the one-time code sent to {email}.
             </p>
             <form onSubmit={handleVerifyCode} className="flex flex-col gap-3">
+              <label htmlFor="otp-code" className="sr-only">One-time code</label>
               <input
+                id="otp-code"
                 type="text"
                 inputMode="numeric"
                 pattern="[0-9]*"
