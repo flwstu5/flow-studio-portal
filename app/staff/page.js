@@ -32,7 +32,7 @@ export default async function StaffOverviewPage() {
 
   const { data: requests } = await admin
     .from("requests")
-    .select("id, title, status, created_at, client_id, clients(business_name, email)")
+    .select("id, title, status, created_at, due_date, client_id, clients(business_name, email)")
     .order("created_at", { ascending: false });
 
   const { data: subscribers } = await admin
@@ -71,6 +71,11 @@ export default async function StaffOverviewPage() {
   const stale = (requests ?? []).filter(
     (r) => r.status !== "delivered" && new Date(r.created_at).getTime() < staleCutoff
   );
+
+  const today = new Date().toISOString().split("T")[0];
+  const overdue = (requests ?? [])
+    .filter((r) => r.status !== "delivered" && r.due_date && r.due_date < today)
+    .sort((a, b) => a.due_date.localeCompare(b.due_date));
 
   // requests is already ordered newest-first, so the first request seen per
   // client_id is that client's most recent request.
@@ -117,6 +122,22 @@ export default async function StaffOverviewPage() {
 
       <main className="flex-1 p-8 flex flex-col gap-6 max-w-3xl">
         <h2 className="text-lg font-medium">Overview</h2>
+
+        {overdue.length > 0 && (
+          <div className="border border-red-300 bg-red-50 rounded p-3">
+            <p className="text-sm font-medium text-red-800">
+              {overdue.length} request{overdue.length === 1 ? "" : "s"} past its due date
+            </p>
+            <div className="flex flex-col gap-1 mt-2">
+              {overdue.map((r) => (
+                <Link key={r.id} href={`/staff/requests/${r.id}`} className="text-xs text-red-700 underline">
+                  {r.title} — {r.clients?.business_name ?? r.clients?.email ?? "Unknown client"} (due{" "}
+                  {new Date(`${r.due_date}T00:00:00`).toLocaleDateString("en-US", { month: "short", day: "numeric" })})
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
 
         {stale.length > 0 && (
           <div className="border border-amber-300 bg-amber-50 rounded p-3">

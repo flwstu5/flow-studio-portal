@@ -28,7 +28,7 @@ export default async function StaffRequestsPage() {
 
   const { data: requests } = await admin
     .from("requests")
-    .select("id, title, type, status, brief, created_at, delivered_at, file_path, client_id, clients(business_name, tier, email)")
+    .select("id, title, type, status, brief, created_at, delivered_at, due_date, file_path, client_id, clients(business_name, tier, email)")
     .order("created_at", { ascending: false });
 
   const requestsWithLinks = await Promise.all(
@@ -56,6 +56,23 @@ export default async function StaffRequestsPage() {
       });
     }
     byClient.get(key).requests.push(r);
+  }
+
+  // Within each client group, surface the most urgent requests first:
+  // open requests with the nearest (or overdue) due date, then open
+  // requests with no due date, then delivered requests last.
+  function urgencyRank(r) {
+    if (r.status === "delivered") return 2;
+    if (r.due_date) return 0;
+    return 1;
+  }
+  for (const group of byClient.values()) {
+    group.requests.sort((a, b) => {
+      const rankDiff = urgencyRank(a) - urgencyRank(b);
+      if (rankDiff !== 0) return rankDiff;
+      if (a.due_date && b.due_date) return a.due_date.localeCompare(b.due_date);
+      return b.created_at.localeCompare(a.created_at);
+    });
   }
 
   const clientGroups = Array.from(byClient.values()).sort((a, b) => {

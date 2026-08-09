@@ -63,6 +63,19 @@ export default function NewRequestPage() {
           </div>
 
           <div className="flex flex-col gap-1.5">
+            <label htmlFor="due-date" className="text-xs font-medium text-neutral-600">
+              Need it by <span className="text-neutral-400 font-normal">(optional)</span>
+            </label>
+            <input
+              id="due-date"
+              name="dueDate"
+              type="date"
+              min={new Date().toISOString().split("T")[0]}
+              className="border border-neutral-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand-light)]"
+            />
+          </div>
+
+          <div className="flex flex-col gap-1.5">
             <label className="text-xs font-medium text-neutral-600">
               Reference file <span className="text-neutral-400 font-normal">(optional)</span>
             </label>

@@ -29,6 +29,8 @@ export async function createRequest(formData) {
   const title = formData.get("title");
   const type = formData.get("type");
   const brief = formData.get("brief");
+  const dueDateRaw = formData.get("dueDate");
+  const dueDate = typeof dueDateRaw === "string" && dueDateRaw.trim() ? dueDateRaw : null;
   const referenceFile = formData.get("referenceFile");
   const hasReferenceFile = referenceFile && typeof referenceFile !== "string" && referenceFile.size > 0;
 
@@ -39,6 +41,7 @@ export async function createRequest(formData) {
       title,
       type,
       brief,
+      due_date: dueDate,
       status: "submitted",
     })
     .select("id, title")

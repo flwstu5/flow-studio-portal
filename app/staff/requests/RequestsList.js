@@ -25,9 +25,16 @@ const CSV_COLUMNS = [
   { label: "Type", value: (r) => r.type ?? "" },
   { label: "Status", value: (r) => statusLabels[r.status] ?? r.status ?? "" },
   { label: "Created", value: (r) => (r.created_at ? r.created_at.split("T")[0] : "") },
+  { label: "Due", value: (r) => r.due_date ?? "" },
   { label: "Delivered", value: (r) => (r.delivered_at ? r.delivered_at.split("T")[0] : "") },
   { label: "Brief", value: (r) => r.brief ?? "" },
 ];
+
+const TODAY = new Date().toISOString().split("T")[0];
+
+function formatDueDate(dateStr) {
+  return new Date(`${dateStr}T00:00:00`).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
 
 export default function RequestsList({ clientGroups }) {
   const [query, setQuery] = useState("");
@@ -122,6 +129,14 @@ function RequestRow({ request }) {
           <span className={`px-1.5 py-0.5 rounded ${statusStyles[request.status] ?? "bg-neutral-100 text-neutral-600"}`}>
             {statusLabels[request.status] ?? request.status}
           </span>
+          {request.due_date && request.status !== "delivered" && (
+            <>
+              {" · "}
+              <span className={request.due_date < TODAY ? "text-red-600 font-medium" : "text-neutral-500"}>
+                {request.due_date < TODAY ? "Overdue" : "Due"} {formatDueDate(request.due_date)}
+              </span>
+            </>
+          )}
         </p>
         {request.brief && (
           <p className="text-xs text-neutral-400 mt-1 line-clamp-2">{request.brief}</p>
