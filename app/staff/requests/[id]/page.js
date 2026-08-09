@@ -60,7 +60,7 @@ export default async function StaffRequestDetailPage({ params }) {
 
   const { data: testimonial } = await admin
     .from("testimonials")
-    .select("id, business_name, quote, role, result, published")
+    .select("id, business_name, quote, role, result, published, portfolio_approved")
     .eq("request_id", id)
     .maybeSingle();
 
@@ -111,6 +111,7 @@ export default async function StaffRequestDetailPage({ params }) {
               defaultBusinessName={request.clients?.business_name}
               defaultQuote={request.rating_feedback}
               existing={testimonial}
+              hasDeliverable={!!request.file_path}
             />
           </div>
         </div>

@@ -4,19 +4,20 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { upsertTestimonial, setTestimonialPublished } from "../../actions";
 
-export default function TestimonialCapture({ requestId, defaultBusinessName, defaultQuote, existing }) {
+export default function TestimonialCapture({ requestId, defaultBusinessName, defaultQuote, existing, hasDeliverable }) {
   const [open, setOpen] = useState(false);
   const [businessName, setBusinessName] = useState(existing?.business_name ?? defaultBusinessName ?? "");
   const [quote, setQuote] = useState(existing?.quote ?? defaultQuote ?? "");
   const [role, setRole] = useState(existing?.role ?? "");
   const [result, setResult] = useState(existing?.result ?? "");
+  const [portfolioApproved, setPortfolioApproved] = useState(existing?.portfolio_approved ?? false);
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
 
   function handleSave(e) {
     e.preventDefault();
     startTransition(async () => {
-      await upsertTestimonial(requestId, { businessName, quote, role, result });
+      await upsertTestimonial(requestId, { businessName, quote, role, result, portfolioApproved });
       setOpen(false);
       router.refresh();
     });
@@ -36,6 +37,7 @@ export default function TestimonialCapture({ requestId, defaultBusinessName, def
         <div className="min-w-0">
           <p className="text-xs font-medium text-neutral-600">
             {existing.published ? "Featured as testimonial" : "Testimonial saved (not published)"}
+            {existing.portfolio_approved && <span className="ml-2 text-brand-dark">· In portfolio</span>}
           </p>
           <p className="text-xs text-neutral-500 mt-0.5 truncate">"{existing.quote}"</p>
         </div>
@@ -97,6 +99,20 @@ export default function TestimonialCapture({ requestId, defaultBusinessName, def
         placeholder="Result line, e.g. Website design & launch — live in time for their event (optional)"
         className="border border-neutral-300 rounded px-2.5 py-1.5 text-sm"
       />
+      {hasDeliverable ? (
+        <label className="flex items-center gap-2 text-xs text-neutral-600">
+          <input
+            type="checkbox"
+            checked={portfolioApproved}
+            onChange={(e) => setPortfolioApproved(e.target.checked)}
+          />
+          Also feature the delivered file in the public Work section
+        </label>
+      ) : (
+        <p className="text-xs text-neutral-400">
+          No delivered file on this request yet — can't add it to the portfolio.
+        </p>
+      )}
       <div className="flex items-center gap-2">
         <button
           type="submit"

@@ -265,7 +265,7 @@ export async function updateClientNotes(clientId, notes) {
   revalidatePath(`/staff/clients/${clientId}`);
 }
 
-export async function upsertTestimonial(requestId, { businessName, quote, role, result }) {
+export async function upsertTestimonial(requestId, { businessName, quote, role, result, portfolioApproved }) {
   await assertIsStaff();
 
   const admin = createAdminClient();
@@ -294,6 +294,7 @@ export async function upsertTestimonial(requestId, { businessName, quote, role, 
     role: role || null,
     result: result || null,
     published: true,
+    portfolio_approved: !!portfolioApproved,
   };
 
   const { error } = existing
