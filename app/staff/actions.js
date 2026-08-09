@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "../../lib/supabaseServer";
 import { createAdminClient } from "../../lib/supabaseAdmin";
+import { notifyClientOfMessage, notifyClientOfDelivery } from "../../lib/notifications";
 
 async function assertIsStaff() {
   const supabase = await createClient();
@@ -37,6 +38,28 @@ export async function updateRequestStatus(requestId, newStatus) {
   }
 
   revalidatePath("/staff");
+
+  if (newStatus === "delivered") {
+    await notifyDelivery(admin, requestId);
+  }
+}
+
+// Shared by updateRequestStatus and uploadDeliverable — both can mark a
+// request delivered, so both need to notify the client the same way.
+async function notifyDelivery(admin, requestId) {
+  const { data: request } = await admin
+    .from("requests")
+    .select("title, clients(email)")
+    .eq("id", requestId)
+    .single();
+
+  if (request) {
+    await notifyClientOfDelivery({
+      requestId,
+      requestTitle: request.title,
+      clientEmail: request.clients?.email,
+    });
+  }
 }
 
 export async function uploadDeliverable(requestId, formData) {
@@ -75,6 +98,7 @@ export async function uploadDeliverable(requestId, formData) {
   }
 
   revalidatePath("/staff");
+  await notifyDelivery(admin, requestId);
 }
 
 export async function sendStaffMessage(requestId, body) {
@@ -94,7 +118,24 @@ export async function sendStaffMessage(requestId, body) {
   }
 
   revalidatePath(`/staff/requests/${requestId}`);
-}export async function updateClient(clientId, { businessName, tier, websiteUrl }) {
+
+  const { data: request } = await admin
+    .from("requests")
+    .select("title, clients(email)")
+    .eq("id", requestId)
+    .single();
+
+  if (request) {
+    await notifyClientOfMessage({
+      requestId,
+      requestTitle: request.title,
+      clientEmail: request.clients?.email,
+      body,
+    });
+  }
+}
+
+export async function updateClient(clientId, { businessName, tier, websiteUrl }) {
   await assertIsStaff();
 
   const admin = createAdminClient();

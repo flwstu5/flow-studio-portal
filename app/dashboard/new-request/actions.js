@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "../../../lib/supabaseServer";
 import { createAdminClient } from "../../../lib/supabaseAdmin";
+import { notifyStaffOfNewRequest } from "../../../lib/notifications";
 
 export async function createRequest(formData) {
   const supabase = await createClient();
@@ -17,7 +18,7 @@ export async function createRequest(formData) {
 
   const { data: client } = await supabase
     .from("clients")
-    .select("id")
+    .select("id, business_name")
     .eq("auth_user_id", user.id)
     .single();
 
@@ -40,7 +41,7 @@ export async function createRequest(formData) {
       brief,
       status: "submitted",
     })
-    .select("id")
+    .select("id, title")
     .single();
 
   if (error) {
@@ -70,6 +71,12 @@ export async function createRequest(formData) {
       }
     }
   }
+
+  await notifyStaffOfNewRequest({
+    requestId: request.id,
+    requestTitle: request.title,
+    businessName: client.business_name || user.email,
+  });
 
   redirect("/dashboard");
 }

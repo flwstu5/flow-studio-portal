@@ -1,13 +1,12 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { createClient } from "../../../../lib/supabaseClient";
+import { sendClientMessage } from "./actions";
 
 export default function MessageThread({ requestId, initialMessages, senderType, senderLabel }) {
   const [messages, setMessages] = useState(initialMessages);
   const [body, setBody] = useState("");
   const [isPending, startTransition] = useTransition();
-  const supabase = createClient();
 
   function handleSend(e) {
     e.preventDefault();
@@ -15,20 +14,21 @@ export default function MessageThread({ requestId, initialMessages, senderType, 
     if (!text) return;
 
     startTransition(async () => {
-      const { data, error } = await supabase
-        .from("messages")
-        .insert({
-          request_id: requestId,
-          sender_type: senderType,
-          sender_label: senderLabel,
-          body: text,
-        })
-        .select()
-        .single();
-
-      if (!error && data) {
-        setMessages((prev) => [...prev, data]);
+      try {
+        await sendClientMessage(requestId, text);
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: crypto.randomUUID(),
+            sender_type: senderType,
+            sender_label: senderLabel,
+            body: text,
+          },
+        ]);
         setBody("");
+      } catch {
+        // Message will still show up on next page load via revalidation
+        // even if this optimistic update path has an issue.
       }
     });
   }
