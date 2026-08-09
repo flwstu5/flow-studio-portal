@@ -13,6 +13,7 @@ export default function OnboardingForm({ businessName: initialName, logoUrl: ini
   const [logoUrl, setLogoUrl] = useState(initialLogoUrl);
   const [file, setFile] = useState(null);
   const [accentColor, setAccentColor] = useState(initialColor);
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [status, setStatus] = useState("idle"); // idle | saving | error
   const [errorMsg, setErrorMsg] = useState("");
   const router = useRouter();
@@ -30,6 +31,11 @@ export default function OnboardingForm({ businessName: initialName, logoUrl: ini
     if (password !== confirmPassword) {
       setStatus("error");
       setErrorMsg("Passwords don't match.");
+      return;
+    }
+    if (!agreedToTerms) {
+      setStatus("error");
+      setErrorMsg("Please agree to the Terms of Service and Privacy Policy to continue.");
       return;
     }
 
@@ -57,6 +63,7 @@ export default function OnboardingForm({ businessName: initialName, logoUrl: ini
         business_name: businessName,
         accent_color: accentColor,
         onboarding_completed_at: new Date().toISOString(),
+        terms_accepted_at: new Date().toISOString(),
       };
       if (logoPath) updates.logo_path = logoPath;
 
@@ -168,6 +175,37 @@ export default function OnboardingForm({ businessName: initialName, logoUrl: ini
               <p className="text-xs text-neutral-400">Used for buttons and highlights across your portal.</p>
             </div>
           </div>
+
+          <label className="flex items-start gap-2 text-xs text-neutral-600 border-t border-neutral-200 pt-5">
+            <input
+              type="checkbox"
+              required
+              checked={agreedToTerms}
+              onChange={(e) => setAgreedToTerms(e.target.checked)}
+              className="mt-0.5"
+            />
+            <span>
+              I agree to the{" "}
+              <a
+                href="https://www.flowstudiogrfx.com/terms"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline text-brand-dark"
+              >
+                Terms of Service
+              </a>{" "}
+              and{" "}
+              <a
+                href="https://www.flowstudiogrfx.com/privacy"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline text-brand-dark"
+              >
+                Privacy Policy
+              </a>
+              .
+            </span>
+          </label>
 
           <button
             type="submit"
