@@ -2,10 +2,13 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import SignOutButton from "../dashboard/SignOutButton";
 
 export default function StaffSidebar({ active }) {
   const [unreadCount, setUnreadCount] = useState(0);
+  const [searchValue, setSearchValue] = useState("");
+  const router = useRouter();
 
   useEffect(() => {
     fetch("/api/notifications/unread-count")
@@ -13,6 +16,13 @@ export default function StaffSidebar({ active }) {
       .then((data) => setUnreadCount(data.count ?? 0))
       .catch(() => {});
   }, [active]);
+
+  function handleSearch(e) {
+    e.preventDefault();
+    const q = searchValue.trim();
+    if (!q) return;
+    router.push(`/staff/search?q=${encodeURIComponent(q)}`);
+  }
 
   const items = [
     { label: "Overview", href: "/staff" },
@@ -30,6 +40,17 @@ export default function StaffSidebar({ active }) {
         <img src="/logo-icon.png" alt="Flow Studio" className="w-9 h-9 rounded" />
         <span className="text-sm font-medium">Flow Studio</span>
       </div>
+
+      <form onSubmit={handleSearch} className="px-2 pb-4">
+        <input
+          type="search"
+          value={searchValue}
+          onChange={(e) => setSearchValue(e.target.value)}
+          placeholder="Search…"
+          aria-label="Search clients, requests, and messages"
+          className="w-full border border-neutral-300 rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-brand-light"
+        />
+      </form>
 
       {items.map((item) => (
         <Link
