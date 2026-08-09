@@ -41,6 +41,12 @@ export default async function StaffOverviewPage() {
     .not("tier", "is", null)
     .is("archived_at", null);
 
+  const { data: ratedRequests } = await admin
+    .from("requests")
+    .select("id, title, rating, rating_submitted_at, clients(business_name, email)")
+    .not("rating", "is", null)
+    .order("rating_submitted_at", { ascending: false });
+
   const openCount = requests?.filter((r) => r.status !== "delivered").length ?? 0;
   const deliveredCount = requests?.filter((r) => r.status === "delivered").length ?? 0;
   const recent = requests?.slice(0, 5) ?? [];
@@ -79,6 +85,31 @@ export default async function StaffOverviewPage() {
     const latest = latestRequestByClient.get(s.id);
     return !latest || new Date(latest).getTime() < inactivityCutoff;
   });
+
+  // Client satisfaction: aggregate the star ratings clients leave via the
+  // post-delivery RatingPrompt (app/dashboard/requests/[id]/RatingPrompt.js).
+  const allRatings = ratedRequests ?? [];
+  const avgRating = allRatings.length
+    ? allRatings.reduce((sum, r) => sum + r.rating, 0) / allRatings.length
+    : null;
+
+  const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+  const recentWindow = allRatings.filter(
+    (r) => Date.now() - new Date(r.rating_submitted_at).getTime() < THIRTY_DAYS_MS
+  );
+  const priorWindow = allRatings.filter((r) => {
+    const age = Date.now() - new Date(r.rating_submitted_at).getTime();
+    return age >= THIRTY_DAYS_MS && age < THIRTY_DAYS_MS * 2;
+  });
+  const recentAvg = recentWindow.length
+    ? recentWindow.reduce((sum, r) => sum + r.rating, 0) / recentWindow.length
+    : null;
+  const priorAvg = priorWindow.length
+    ? priorWindow.reduce((sum, r) => sum + r.rating, 0) / priorWindow.length
+    : null;
+  const ratingTrend = recentAvg !== null && priorAvg !== null ? recentAvg - priorAvg : null;
+
+  const recentRatings = allRatings.slice(0, 5);
 
   return (
     <div className="min-h-screen flex bg-white">
@@ -133,6 +164,44 @@ export default async function StaffOverviewPage() {
         </div>
 
         {tierSummary && <p className="text-xs text-neutral-400 -mt-4">{tierSummary}</p>}
+
+        {allRatings.length > 0 && (
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-sm font-medium">Client satisfaction</h3>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium">
+                  {avgRating.toFixed(1)}/5 <span className="text-xs text-neutral-400 font-normal">({allRatings.length})</span>
+                </span>
+                {ratingTrend !== null && Math.abs(ratingTrend) >= 0.05 && (
+                  <span className={`text-xs font-medium ${ratingTrend > 0 ? "text-green-600" : "text-red-600"}`}>
+                    {ratingTrend > 0 ? "▲" : "▼"} {Math.abs(ratingTrend).toFixed(1)}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            <div className="flex flex-col">
+              {recentRatings.map((r) => (
+                <div
+                  key={r.id}
+                  className="flex items-center justify-between border-t border-neutral-200 py-2.5 last:border-b"
+                >
+                  <div className="min-w-0">
+                    <p className="text-sm truncate">{r.title}</p>
+                    <p className="text-xs text-neutral-500 mt-0.5">
+                      {r.clients?.business_name ?? r.clients?.email ?? "Unknown client"}
+                    </p>
+                  </div>
+                  <span className="text-xs text-amber-500 flex-shrink-0" aria-label={`${r.rating} out of 5 stars`}>
+                    {"★".repeat(r.rating)}
+                    <span className="text-neutral-300">{"★".repeat(5 - r.rating)}</span>
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div>
           <div className="flex items-center justify-between mb-2">
