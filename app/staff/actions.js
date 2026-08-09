@@ -231,6 +231,27 @@ export async function assignRequest(requestId, assignedTo) {
   revalidatePath("/staff");
 }
 
+export async function setReferralReward(referralId, rewardStatus) {
+  await assertIsStaff();
+
+  if (!["none", "owed", "paid"].includes(rewardStatus)) {
+    throw new Error("Invalid reward status.");
+  }
+
+  const admin = createAdminClient();
+
+  const updates = { reward_status: rewardStatus };
+  updates.reward_paid_at = rewardStatus === "paid" ? new Date().toISOString() : null;
+
+  const { error } = await admin.from("referrals").update(updates).eq("id", referralId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  revalidatePath("/staff/referrals");
+}
+
 export async function sendCheckIn(clientId) {
   await assertIsStaff();
 
