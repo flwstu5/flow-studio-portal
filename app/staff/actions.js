@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "../../lib/supabaseServer";
 import { createAdminClient } from "../../lib/supabaseAdmin";
-import { notifyClientOfMessage, notifyClientOfDelivery } from "../../lib/notifications";
+import { notifyClientOfMessage, notifyClientOfDelivery, notifyClientCheckIn } from "../../lib/notifications";
 
 async function assertIsStaff() {
   const supabase = await createClient();
@@ -195,6 +195,39 @@ export async function unarchiveClient(clientId) {
 
   revalidatePath(`/staff/clients/${clientId}`);
   revalidatePath("/staff/clients");
+}
+
+export async function sendCheckIn(clientId) {
+  await assertIsStaff();
+
+  const admin = createAdminClient();
+
+  const { data: client } = await admin
+    .from("clients")
+    .select("email, business_name")
+    .eq("id", clientId)
+    .single();
+
+  if (!client) {
+    throw new Error("Client not found.");
+  }
+
+  await notifyClientCheckIn({
+    clientId,
+    clientEmail: client.email,
+    businessName: client.business_name,
+  });
+
+  const { error } = await admin
+    .from("clients")
+    .update({ last_checkin_sent_at: new Date().toISOString() })
+    .eq("id", clientId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  revalidatePath("/staff");
 }
 
 export async function updateClientNotes(clientId, notes) {

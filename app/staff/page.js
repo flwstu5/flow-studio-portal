@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "../../lib/supabaseServer";
 import { createAdminClient } from "../../lib/supabaseAdmin";
 import StaffSidebar from "./StaffSidebar";
+import CheckInButton from "./CheckInButton";
 import { TIER_PLANS } from "../dashboard/tierPlans";
 
 const STALE_DAYS = 3;
@@ -37,7 +38,7 @@ export default async function StaffOverviewPage() {
 
   const { data: subscribers } = await admin
     .from("clients")
-    .select("id, business_name, email, tier")
+    .select("id, business_name, email, tier, last_checkin_sent_at")
     .not("tier", "is", null)
     .is("archived_at", null);
 
@@ -163,16 +164,20 @@ export default async function StaffOverviewPage() {
             <p className="text-sm font-medium text-blue-800">
               {inactive.length} subscriber{inactive.length === 1 ? "" : "s"} with no request in {INACTIVITY_DAYS}+ days
             </p>
-            <div className="flex flex-col gap-1 mt-2">
-              {inactive.map((s) => (
-                <Link
-                  key={s.id}
-                  href={`/staff/clients/${s.id}`}
-                  className="text-xs text-blue-700 underline"
-                >
-                  {s.business_name ?? s.email}
-                </Link>
-              ))}
+            <div className="flex flex-col gap-1.5 mt-2">
+              {inactive.map((s) => {
+                const alreadySentRecently =
+                  !!s.last_checkin_sent_at &&
+                  Date.now() - new Date(s.last_checkin_sent_at).getTime() < INACTIVITY_DAYS * 24 * 60 * 60 * 1000;
+                return (
+                  <div key={s.id} className="flex items-center justify-between gap-2">
+                    <Link href={`/staff/clients/${s.id}`} className="text-xs text-blue-700 underline">
+                      {s.business_name ?? s.email}
+                    </Link>
+                    <CheckInButton clientId={s.id} alreadySentRecently={alreadySentRecently} />
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}
