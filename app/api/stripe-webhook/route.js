@@ -31,8 +31,15 @@ export async function POST(request) {
 
   console.log("Stripe webhook received:", event.type);
 
+  const supabaseForSync = createAdminClient();
+
+  if (event.type === "customer.subscription.updated" || event.type === "customer.subscription.deleted") {
+    await syncSubscription(supabaseForSync, event.data.object);
+    return NextResponse.json({ received: true });
+  }
+
   if (event.type !== "checkout.session.completed") {
-    // Not a new-subscription event — acknowledge and ignore.
+    // Not an event we handle — acknowledge and ignore.
     return NextResponse.json({ received: true });
   }
 
@@ -145,4 +152,59 @@ export async function POST(request) {
   }
 
   return NextResponse.json({ received: true });
+}
+
+// Fires on customer.subscription.updated (plan change, or cancellation
+// scheduled/reactivated) and customer.subscription.deleted (subscription
+// actually ended). Keeps the client's tier in sync with what they're
+// really paying for, since these can now happen outside of a checkout
+// (e.g. through the self-service billing portal).
+async function syncSubscription(supabase, subscription) {
+  const customerId =
+    typeof subscription.customer === "string" ? subscription.customer : subscription.customer?.id ?? null;
+
+  if (!customerId) {
+    console.error("Subscription event had no customer id:", subscription.id);
+    return;
+  }
+
+  const { data: client, error: lookupError } = await supabase
+    .from("clients")
+    .select("id")
+    .eq("stripe_customer_id", customerId)
+    .maybeSingle();
+
+  if (lookupError) {
+    console.error("Error looking up client for subscription sync:", lookupError.message);
+    return;
+  }
+
+  if (!client) {
+    // Most likely a customer that predates stripe_customer_id being
+    // captured — nothing to sync until they next touch Stripe checkout.
+    console.error("No client found for Stripe customer:", customerId);
+    return;
+  }
+
+  const isActive = subscription.status === "active" || subscription.status === "trialing";
+  const priceId = subscription.items?.data?.[0]?.price?.id ?? null;
+  const tier = isActive ? PRICE_TO_TIER[priceId] ?? null : null;
+
+  const updates = {
+    tier,
+    subscription_status: subscription.status,
+    cancel_at_period_end: !!subscription.cancel_at_period_end,
+  };
+
+  if (subscription.current_period_end) {
+    updates.renews_at = new Date(subscription.current_period_end * 1000).toISOString().split("T")[0];
+  }
+
+  const { error: updateError } = await supabase.from("clients").update(updates).eq("id", client.id);
+
+  if (updateError) {
+    console.error("Failed to sync subscription:", updateError.message);
+  } else {
+    console.log("Synced subscription for client:", client.id, updates);
+  }
 }

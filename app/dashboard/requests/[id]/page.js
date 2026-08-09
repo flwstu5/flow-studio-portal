@@ -3,6 +3,7 @@ import Link from "next/link";
 import { createClient } from "../../../../lib/supabaseServer";
 import MessageThread from "./MessageThread";
 import RatingPrompt from "./RatingPrompt";
+import RevisionRequestButton from "./RevisionRequestButton";
 
 export default async function RequestDetailPage({ params }) {
   const { id } = await params;
@@ -68,7 +69,10 @@ export default async function RequestDetailPage({ params }) {
       )}
 
       {request.status === "delivered" && (
-        <RatingPrompt requestId={id} initialRating={request.rating} />
+        <>
+          <RatingPrompt requestId={id} initialRating={request.rating} />
+          <RevisionRequestButton requestId={id} />
+        </>
       )}
 
       <MessageThread

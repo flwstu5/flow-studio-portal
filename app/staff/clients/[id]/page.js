@@ -88,6 +88,11 @@ export default async function StaffClientDetailPage({ params }) {
                   {client.tier}
                 </span>
               )}
+              {client.cancel_at_period_end && (
+                <span className="text-xs font-medium px-2 py-0.5 rounded bg-amber-100 text-amber-800">
+                  Canceling {client.renews_at ? formatDate(client.renews_at) : ""}
+                </span>
+              )}
               {client.archived_at && (
                 <span className="text-xs font-medium px-2 py-0.5 rounded bg-neutral-200 text-neutral-600">
                   Archived

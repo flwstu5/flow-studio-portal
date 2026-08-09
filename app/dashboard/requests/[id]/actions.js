@@ -102,3 +102,77 @@ export async function sendClientMessage(requestId, body) {
     body,
   });
 }
+
+export async function requestRevision(requestId, notes) {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/login");
+  }
+
+  const { data: client } = await supabase
+    .from("clients")
+    .select("id, business_name")
+    .eq("auth_user_id", user.id)
+    .single();
+
+  if (!client) {
+    throw new Error("No client record found for this account.");
+  }
+
+  const admin = createAdminClient();
+
+  // Only revisions on this client's own delivered requests are allowed.
+  const { data: request } = await admin
+    .from("requests")
+    .select("id, title, status")
+    .eq("id", requestId)
+    .eq("client_id", client.id)
+    .single();
+
+  if (!request) {
+    throw new Error("Request not found.");
+  }
+
+  if (request.status !== "delivered") {
+    throw new Error("Only delivered requests can have a revision requested.");
+  }
+
+  const { error: updateError } = await admin
+    .from("requests")
+    .update({ status: "in_review" })
+    .eq("id", requestId);
+
+  if (updateError) {
+    throw new Error(updateError.message);
+  }
+
+  const senderLabel = client.business_name || user.email;
+  const trimmedNotes = (notes ?? "").trim();
+  const body = trimmedNotes ? `Requested a revision: ${trimmedNotes}` : "Requested a revision.";
+
+  const { error: messageError } = await admin.from("messages").insert({
+    request_id: requestId,
+    sender_type: "client",
+    sender_label: senderLabel,
+    body,
+  });
+
+  if (messageError) {
+    throw new Error(messageError.message);
+  }
+
+  revalidatePath(`/dashboard/requests/${requestId}`);
+  revalidatePath("/staff");
+
+  await notifyStaffOfMessage({
+    requestId,
+    requestTitle: request.title,
+    senderLabel,
+    body,
+  });
+}

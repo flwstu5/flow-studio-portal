@@ -107,6 +107,13 @@ export default async function DashboardPage({ searchParams }) {
           </div>
         </div>
 
+        {client?.cancel_at_period_end && client?.renews_at && (
+          <div className="border border-amber-300 bg-amber-50 rounded p-3 text-xs text-amber-800">
+            Your subscription is set to cancel on {formatDate(client.renews_at)}. You'll keep access until then —
+            changed your mind? Use "Manage billing" above.
+          </div>
+        )}
+
         {billing === "unavailable" && (
           <div className="border border-neutral-200 bg-neutral-50 rounded p-3 text-xs text-neutral-600">
             Billing management isn't set up on your account yet — email us and we'll sort it out.
