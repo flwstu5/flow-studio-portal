@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import StatusSelect from "../StatusSelect";
 import UploadDeliverable from "../UploadDeliverable";
+import { toCsv, downloadCsv } from "../../../lib/csv";
 
 const statusStyles = {
   submitted: "bg-brand-tint text-brand-dark",
@@ -16,6 +17,17 @@ const statusLabels = {
   in_review: "In review",
   delivered: "Delivered",
 };
+
+const CSV_COLUMNS = [
+  { label: "Client", value: (r) => r.businessName ?? "" },
+  { label: "Tier", value: (r) => r.tier ?? "" },
+  { label: "Title", value: (r) => r.title ?? "" },
+  { label: "Type", value: (r) => r.type ?? "" },
+  { label: "Status", value: (r) => statusLabels[r.status] ?? r.status ?? "" },
+  { label: "Created", value: (r) => (r.created_at ? r.created_at.split("T")[0] : "") },
+  { label: "Delivered", value: (r) => (r.delivered_at ? r.delivered_at.split("T")[0] : "") },
+  { label: "Brief", value: (r) => r.brief ?? "" },
+];
 
 export default function RequestsList({ clientGroups }) {
   const [query, setQuery] = useState("");
@@ -36,15 +48,33 @@ export default function RequestsList({ clientGroups }) {
       .filter(Boolean);
   }, [clientGroups, query]);
 
+  function handleExport() {
+    const rows = filtered.flatMap((group) =>
+      group.requests.map((r) => ({ ...r, businessName: group.businessName, tier: group.tier }))
+    );
+    const csv = toCsv(rows, CSV_COLUMNS);
+    downloadCsv(`requests-${new Date().toISOString().split("T")[0]}.csv`, csv);
+  }
+
   return (
     <div>
-      <input
-        type="search"
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        placeholder="Search requests by client, title, type, or status…"
-        className="w-full border border-neutral-300 rounded px-3 py-2 text-sm mb-6 focus:outline-none focus:ring-2 focus:ring-brand-light"
-      />
+      <div className="flex items-center gap-3 mb-6">
+        <input
+          type="search"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search requests by client, title, type, or status…"
+          className="flex-1 border border-neutral-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-light"
+        />
+        <button
+          type="button"
+          onClick={handleExport}
+          disabled={filtered.length === 0}
+          className="text-xs font-medium border border-neutral-300 rounded px-3 py-2 text-neutral-600 flex-shrink-0 whitespace-nowrap disabled:opacity-50"
+        >
+          Export CSV
+        </button>
+      </div>
 
       <div className="flex flex-col gap-6">
         {filtered.length ? (

@@ -2,6 +2,18 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { toCsv, downloadCsv } from "../../../lib/csv";
+
+const CSV_COLUMNS = [
+  { label: "Business name", value: (c) => c.business_name ?? "" },
+  { label: "Email", value: (c) => c.email ?? "" },
+  { label: "Client type", value: (c) => (c.client_type === "subscriber" ? "Subscriber" : "Project client") },
+  { label: "Tier", value: (c) => c.tier ?? "" },
+  { label: "Status", value: (c) => (c.archived_at ? "Archived" : "Active") },
+  { label: "Open requests", value: (c) => c.openCount ?? 0 },
+  { label: "Total requests", value: (c) => c.totalCount ?? 0 },
+  { label: "Snapshot grade", value: (c) => c.snapshotGrade ?? "" },
+];
 
 export default function ClientsList({ clients }) {
   const [query, setQuery] = useState("");
@@ -18,6 +30,11 @@ export default function ClientsList({ clients }) {
   }, [clients, query, showArchived]);
 
   const archivedCount = clients.filter((c) => c.archived_at).length;
+
+  function handleExport() {
+    const csv = toCsv(filtered, CSV_COLUMNS);
+    downloadCsv(`clients-${new Date().toISOString().split("T")[0]}.csv`, csv);
+  }
 
   return (
     <div>
@@ -39,6 +56,14 @@ export default function ClientsList({ clients }) {
             Show archived ({archivedCount})
           </label>
         )}
+        <button
+          type="button"
+          onClick={handleExport}
+          disabled={filtered.length === 0}
+          className="text-xs font-medium border border-neutral-300 rounded px-3 py-2 text-neutral-600 flex-shrink-0 whitespace-nowrap disabled:opacity-50"
+        >
+          Export CSV
+        </button>
       </div>
 
       <div className="flex flex-col">
