@@ -5,6 +5,7 @@ import { createAdminClient } from "../../../../lib/supabaseAdmin";
 import StaffSidebar from "../../StaffSidebar";
 import EditClientForm from "./EditClientForm";
 import ArchiveButton from "./ArchiveButton";
+import ClientNotes from "./ClientNotes";
 import GradeTrend from "../../../dashboard/GradeTrend";
 
 const statusStyles = {
@@ -63,6 +64,12 @@ export default async function StaffClientDetailPage({ params }) {
     .select("id, url, grade_letter, grade_percent, opportunity_count, created_at")
     .eq("client_id", id)
     .order("created_at", { ascending: false });
+
+  const { data: clientNotes } = await admin
+    .from("client_notes")
+    .select("notes")
+    .eq("client_id", id)
+    .maybeSingle();
 
   const latestSnapshot = snapshots?.[0] ?? null;
   const snapshotUrl = client.website_url || latestSnapshot?.url || "";
@@ -160,6 +167,8 @@ export default async function StaffClientDetailPage({ params }) {
             </p>
           )}
         </div>
+
+        <ClientNotes clientId={client.id} initialNotes={clientNotes?.notes ?? ""} />
 
         <h2 className="text-sm font-medium mb-2">Requests</h2>
         <div className="flex flex-col">

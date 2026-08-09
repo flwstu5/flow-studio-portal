@@ -197,6 +197,22 @@ export async function unarchiveClient(clientId) {
   revalidatePath("/staff/clients");
 }
 
+export async function updateClientNotes(clientId, notes) {
+  await assertIsStaff();
+
+  const admin = createAdminClient();
+
+  const { error } = await admin
+    .from("client_notes")
+    .upsert({ client_id: clientId, notes, updated_at: new Date().toISOString() });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  revalidatePath(`/staff/clients/${clientId}`);
+}
+
 export async function deleteMessage(messageId, requestId) {
   await assertIsStaff();
 
