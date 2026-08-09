@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "../../../../lib/supabaseServer";
 import { createAdminClient } from "../../../../lib/supabaseAdmin";
-import { notifyStaffOfMessage } from "../../../../lib/notifications";
+import { notifyStaffOfMessage, notifyClientReviewRequest } from "../../../../lib/notifications";
 
 export async function submitRating(requestId, rating, feedback) {
   const supabase = await createClient();
@@ -19,7 +19,7 @@ export async function submitRating(requestId, rating, feedback) {
 
   const { data: client } = await supabase
     .from("clients")
-    .select("id")
+    .select("id, email, business_name")
     .eq("auth_user_id", user.id)
     .single();
 
@@ -48,6 +48,20 @@ export async function submitRating(requestId, rating, feedback) {
   if (error) {
     throw new Error(error.message);
   }
+
+  // Only nudge for a public review on the best rating, and only once the
+  // real Google review link is configured (unset in the meantime, so this
+  // quietly no-ops until then rather than sending a broken link).
+  const reviewUrl = process.env.GOOGLE_REVIEW_URL || null;
+  if (rating === 5 && reviewUrl) {
+    await notifyClientReviewRequest({
+      clientEmail: client.email,
+      businessName: client.business_name,
+      reviewUrl,
+    });
+  }
+
+  return { reviewUrl: rating === 5 ? reviewUrl : null };
 }
 
 export async function sendClientMessage(requestId, body) {

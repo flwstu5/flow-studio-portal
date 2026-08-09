@@ -8,13 +8,15 @@ export default function RatingPrompt({ requestId, initialRating }) {
   const [hover, setHover] = useState(0);
   const [feedback, setFeedback] = useState("");
   const [submitted, setSubmitted] = useState(!!initialRating);
+  const [reviewUrl, setReviewUrl] = useState(null);
   const [isPending, startTransition] = useTransition();
 
   function handleSubmit() {
     if (!rating) return;
     startTransition(async () => {
       try {
-        await submitRating(requestId, rating, feedback);
+        const result = await submitRating(requestId, rating, feedback);
+        setReviewUrl(result?.reviewUrl ?? null);
         setSubmitted(true);
       } catch {
         // leave the stars/feedback in place so the client can try again
@@ -28,6 +30,16 @@ export default function RatingPrompt({ requestId, initialRating }) {
         <p className="text-xs text-neutral-500">
           Thanks for the feedback{rating ? ` — ${rating}/5 stars` : ""}!
         </p>
+        {reviewUrl && (
+          <a
+            href={reviewUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block mt-2 text-xs font-medium text-[var(--brand-color)] border border-[var(--brand-light)] rounded px-3 py-1.5"
+          >
+            Leave us a Google review
+          </a>
+        )}
       </div>
     );
   }
