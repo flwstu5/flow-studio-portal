@@ -29,6 +29,7 @@ export default function StaffSidebar({ active }) {
     { label: "Clients", href: "/staff/clients" },
     { label: "Leads", href: "/staff/leads" },
     { label: "Requests", href: "/staff/requests" },
+    { label: "Deadlines", href: "/staff/deadlines" },
     { label: "Files", href: "/staff/files" },
     { label: "Messages", href: "/staff/messages" },
     { label: "Notifications", href: "/staff/notifications" },
