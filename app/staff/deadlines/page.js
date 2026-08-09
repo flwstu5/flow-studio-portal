@@ -40,12 +40,29 @@ export default async function StaffDeadlinesPage() {
 
   const groups = groupByDate(requests ?? []);
 
+  const feedSecret = process.env.DEADLINES_FEED_SECRET;
+  const feedUrl = feedSecret ? `https://portal.flowstudiogrfx.com/api/staff/deadlines.ics?token=${feedSecret}` : null;
+
   return (
     <div className="min-h-screen flex bg-white">
       <StaffSidebar active="Deadlines" />
 
       <main className="flex-1 p-8 max-w-3xl">
-        <h2 className="text-lg font-medium mb-1">Deadlines</h2>
+        <div className="flex items-center justify-between gap-3 flex-wrap mb-1">
+          <h2 className="text-lg font-medium">Deadlines</h2>
+          {feedUrl ? (
+            <a
+              href={feedUrl}
+              className="text-xs text-brand-dark border border-brand-light rounded px-3 py-1.5"
+            >
+              Subscribe (.ics)
+            </a>
+          ) : (
+            <span className="text-xs text-neutral-400">
+              Set DEADLINES_FEED_SECRET to enable calendar subscription
+            </span>
+          )}
+        </div>
         <p className="text-sm text-neutral-500 mb-8">
           Every open request with a due date, soonest first.
         </p>
