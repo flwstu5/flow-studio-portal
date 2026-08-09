@@ -3,6 +3,9 @@ import { redirect } from "next/navigation";
 import { createClient } from "../../lib/supabaseServer";
 import { createAdminClient } from "../../lib/supabaseAdmin";
 import StaffSidebar from "./StaffSidebar";
+import { TIER_PLANS } from "../dashboard/tierPlans";
+
+const STALE_DAYS = 3;
 
 export default async function StaffOverviewPage() {
   const supabase = await createClient();
@@ -31,13 +34,36 @@ export default async function StaffOverviewPage() {
     .select("id, title, status, created_at, clients(business_name, email)")
     .order("created_at", { ascending: false });
 
-  const { count: clientCount } = await admin
+  const { data: subscribers } = await admin
     .from("clients")
-    .select("id", { count: "exact", head: true });
+    .select("tier")
+    .not("tier", "is", null)
+    .is("archived_at", null);
 
   const openCount = requests?.filter((r) => r.status !== "delivered").length ?? 0;
   const deliveredCount = requests?.filter((r) => r.status === "delivered").length ?? 0;
   const recent = requests?.slice(0, 5) ?? [];
+
+  const clientCount = subscribers?.length ?? 0;
+
+  const tierCounts = { starter: 0, growth: 0, premium: 0 };
+  for (const s of subscribers ?? []) {
+    const key = (s.tier ?? "").toLowerCase();
+    if (key in tierCounts) tierCounts[key] += 1;
+  }
+  const mrr = Object.entries(tierCounts).reduce(
+    (sum, [tier, count]) => sum + count * (TIER_PLANS[tier]?.price ?? 0),
+    0
+  );
+  const tierSummary = Object.entries(tierCounts)
+    .filter(([, count]) => count > 0)
+    .map(([tier, count]) => `${count} ${TIER_PLANS[tier]?.name ?? tier}`)
+    .join(" · ");
+
+  const staleCutoff = Date.now() - STALE_DAYS * 24 * 60 * 60 * 1000;
+  const stale = (requests ?? []).filter(
+    (r) => r.status !== "delivered" && new Date(r.created_at).getTime() < staleCutoff
+  );
 
   return (
     <div className="min-h-screen flex bg-white">
@@ -46,11 +72,33 @@ export default async function StaffOverviewPage() {
       <main className="flex-1 p-8 flex flex-col gap-6 max-w-3xl">
         <h2 className="text-lg font-medium">Overview</h2>
 
-        <div className="grid grid-cols-3 gap-px bg-neutral-200 rounded overflow-hidden">
+        {stale.length > 0 && (
+          <div className="border border-amber-300 bg-amber-50 rounded p-3">
+            <p className="text-sm font-medium text-amber-800">
+              {stale.length} request{stale.length === 1 ? "" : "s"} sitting {STALE_DAYS}+ days without delivery
+            </p>
+            <div className="flex flex-col gap-1 mt-2">
+              {stale.map((r) => (
+                <Link
+                  key={r.id}
+                  href={`/staff/requests/${r.id}`}
+                  className="text-xs text-amber-700 underline"
+                >
+                  {r.title} — {r.clients?.business_name ?? r.clients?.email ?? "Unknown client"}
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-neutral-200 rounded overflow-hidden">
           <Stat label="Open requests" value={openCount} />
           <Stat label="Delivered" value={deliveredCount} />
-          <Stat label="Total clients" value={clientCount ?? "—"} />
+          <Stat label="Subscribers" value={clientCount} />
+          <Stat label="MRR" value={`$${mrr.toLocaleString()}`} />
         </div>
+
+        {tierSummary && <p className="text-xs text-neutral-400 -mt-4">{tierSummary}</p>}
 
         <div>
           <div className="flex items-center justify-between mb-2">

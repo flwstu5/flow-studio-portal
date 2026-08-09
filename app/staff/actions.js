@@ -49,7 +49,7 @@ export async function updateRequestStatus(requestId, newStatus) {
 async function notifyDelivery(admin, requestId) {
   const { data: request } = await admin
     .from("requests")
-    .select("title, clients(id, email)")
+    .select("title, clients(id, email, notify_delivery)")
     .eq("id", requestId)
     .single();
 
@@ -59,6 +59,7 @@ async function notifyDelivery(admin, requestId) {
       requestTitle: request.title,
       clientId: request.clients?.id,
       clientEmail: request.clients?.email,
+      notifyDelivery: request.clients?.notify_delivery ?? true,
     });
   }
 }
@@ -122,7 +123,7 @@ export async function sendStaffMessage(requestId, body) {
 
   const { data: request } = await admin
     .from("requests")
-    .select("title, clients(id, email)")
+    .select("title, clients(id, email, notify_messages)")
     .eq("id", requestId)
     .single();
 
@@ -132,6 +133,7 @@ export async function sendStaffMessage(requestId, body) {
       requestTitle: request.title,
       clientId: request.clients?.id,
       clientEmail: request.clients?.email,
+      notifyMessages: request.clients?.notify_messages ?? true,
       body,
     });
   }

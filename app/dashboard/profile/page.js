@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "../../../lib/supabaseServer";
 import ProfileForm from "./ProfileForm";
+import NotificationPreferencesForm from "./NotificationPreferencesForm";
 
 export default async function ProfilePage() {
   const supabase = await createClient();
@@ -38,6 +39,12 @@ export default async function ProfilePage() {
         currentBusinessName={client?.business_name ?? ""}
         currentLogoUrl={logoUrl}
         currentAccentColor={client?.accent_color ?? ""}
+      />
+
+      <h2 className="text-sm font-medium mt-8 mb-4">Notifications</h2>
+      <NotificationPreferencesForm
+        currentNotifyMessages={client?.notify_messages ?? true}
+        currentNotifyDelivery={client?.notify_delivery ?? true}
       />
     </main>
   );

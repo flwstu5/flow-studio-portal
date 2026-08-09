@@ -5,16 +5,19 @@ export const TIER_PLANS = {
   starter: {
     name: "Starter",
     flyersPerMonth: 2,
+    price: 70,
     checkoutUrl: "https://buy.stripe.com/9B6cN40NN0CSg1Q16c9sk00",
   },
   growth: {
     name: "Growth",
     flyersPerMonth: 4,
+    price: 150,
     checkoutUrl: "https://buy.stripe.com/9B68wObsrbhwcPE5ms9sk01",
   },
   premium: {
     name: "Premium",
     flyersPerMonth: 8,
+    price: 275,
     checkoutUrl: "https://buy.stripe.com/3cIfZg2VV1GWg1Q0289sk02",
   },
 };
