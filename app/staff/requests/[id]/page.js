@@ -37,6 +37,19 @@ export default async function StaffRequestDetailPage({ params }) {
     redirect("/staff");
   }
 
+  let referenceFileUrl = null;
+  let referenceFileName = null;
+  if (request.reference_file_path) {
+    const { data, error } = await admin.storage
+      .from("references")
+      .createSignedUrl(request.reference_file_path, 60 * 60);
+    if (error) {
+      console.error("Signed URL error for reference file:", error.message);
+    }
+    referenceFileUrl = data?.signedUrl ?? null;
+    referenceFileName = request.reference_file_path.split("/").pop().replace(/^\d+-/, "");
+  }
+
   const { data: messages } = await admin
     .from("messages")
     .select("*")
@@ -60,6 +73,14 @@ export default async function StaffRequestDetailPage({ params }) {
         <div className="border-t border-b border-neutral-200 py-4 mb-6">
           <p className="text-xs font-medium text-neutral-500 mb-1">Original brief</p>
           <p className="text-sm text-neutral-700 whitespace-pre-wrap">{request.brief}</p>
+          {referenceFileUrl && (
+            <p className="text-xs text-neutral-500 mt-3">
+              📎{" "}
+              <a href={referenceFileUrl} target="_blank" rel="noopener noreferrer" className="underline text-[var(--brand-color)]">
+                {referenceFileName}
+              </a>
+            </p>
+          )}
         </div>
       )}
 

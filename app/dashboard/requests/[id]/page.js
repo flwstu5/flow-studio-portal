@@ -33,6 +33,11 @@ export default async function RequestDetailPage({ params }) {
     redirect("/dashboard");
   }
 
+  let referenceFileName = null;
+  if (request.reference_file_path) {
+    referenceFileName = request.reference_file_path.split("/").pop().replace(/^\d+-/, "");
+  }
+
   const { data: messages } = await supabase
     .from("messages")
     .select("*")
@@ -56,6 +61,9 @@ export default async function RequestDetailPage({ params }) {
         <div className="border-t border-b border-neutral-200 py-4 mb-6">
           <p className="text-xs font-medium text-neutral-500 mb-1">Original brief</p>
           <p className="text-sm text-neutral-700 whitespace-pre-wrap">{request.brief}</p>
+          {referenceFileName && (
+            <p className="text-xs text-neutral-500 mt-3">📎 {referenceFileName} attached</p>
+          )}
         </div>
       )}
 

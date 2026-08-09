@@ -19,7 +19,7 @@ export default function NewRequestPage() {
           Tell us what you need — we'll pick it up from here.
         </p>
 
-        <form action={createRequest} className="flex flex-col gap-4">
+        <form action={createRequest} className="flex flex-col gap-4" encType="multipart/form-data">
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-medium text-neutral-600">
               Title
@@ -60,6 +60,19 @@ export default function NewRequestPage() {
               placeholder="What's this for? Include dates, sizes, wording, or anything else we should know."
               className="border border-neutral-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand-light)] resize-none"
             />
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-medium text-neutral-600">
+              Reference file <span className="text-neutral-400 font-normal">(optional)</span>
+            </label>
+            <input
+              name="referenceFile"
+              type="file"
+              accept="image/*,.pdf"
+              className="text-sm text-neutral-600 file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-xs file:font-medium file:bg-neutral-100 file:text-neutral-700"
+            />
+            <p className="text-xs text-neutral-400">A logo, inspiration image, or existing flyer to work from.</p>
           </div>
 
           <button
