@@ -27,6 +27,7 @@ const CSV_COLUMNS = [
   { label: "Created", value: (r) => (r.created_at ? r.created_at.split("T")[0] : "") },
   { label: "Due", value: (r) => r.due_date ?? "" },
   { label: "Delivered", value: (r) => (r.delivered_at ? r.delivered_at.split("T")[0] : "") },
+  { label: "Assigned to", value: (r) => r.assigned_to ?? "" },
   { label: "Brief", value: (r) => r.brief ?? "" },
 ];
 
@@ -135,6 +136,12 @@ function RequestRow({ request }) {
               <span className={request.due_date < TODAY ? "text-red-600 font-medium" : "text-neutral-500"}>
                 {request.due_date < TODAY ? "Overdue" : "Due"} {formatDueDate(request.due_date)}
               </span>
+            </>
+          )}
+          {request.assigned_to && (
+            <>
+              {" · "}
+              <span className="text-neutral-500">Assigned: {request.assigned_to.split("@")[0]}</span>
             </>
           )}
         </p>

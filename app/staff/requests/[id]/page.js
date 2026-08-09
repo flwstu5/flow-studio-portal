@@ -4,6 +4,7 @@ import { createClient } from "../../../../lib/supabaseServer";
 import { createAdminClient } from "../../../../lib/supabaseAdmin";
 import StaffMessageThread from "./StaffMessageThread";
 import TestimonialCapture from "./TestimonialCapture";
+import AssignSelect from "./AssignSelect";
 
 export default async function StaffRequestDetailPage({ params }) {
   const { id } = await params;
@@ -74,6 +75,10 @@ export default async function StaffRequestDetailPage({ params }) {
         <p className="text-xs text-neutral-500 mt-1 capitalize">
           {request.clients?.business_name ?? request.clients?.email} · {request.type} · {request.status.replace("_", " ")}
         </p>
+        <div className="mt-3 flex items-center gap-2">
+          <span className="text-xs font-medium text-neutral-500">Assigned to</span>
+          <AssignSelect requestId={id} staffEmails={staffEmails} currentAssignee={request.assigned_to} />
+        </div>
       </div>
 
       {request.brief && (

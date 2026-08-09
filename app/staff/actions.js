@@ -197,6 +197,25 @@ export async function unarchiveClient(clientId) {
   revalidatePath("/staff/clients");
 }
 
+export async function assignRequest(requestId, assignedTo) {
+  await assertIsStaff();
+
+  const admin = createAdminClient();
+
+  const { error } = await admin
+    .from("requests")
+    .update({ assigned_to: assignedTo || null })
+    .eq("id", requestId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  revalidatePath(`/staff/requests/${requestId}`);
+  revalidatePath("/staff/requests");
+  revalidatePath("/staff");
+}
+
 export async function sendCheckIn(clientId) {
   await assertIsStaff();
 

@@ -28,7 +28,7 @@ export default async function StaffRequestsPage() {
 
   const { data: requests } = await admin
     .from("requests")
-    .select("id, title, type, status, brief, created_at, delivered_at, due_date, file_path, client_id, clients(business_name, tier, email)")
+    .select("id, title, type, status, brief, created_at, delivered_at, due_date, file_path, assigned_to, client_id, clients(business_name, tier, email)")
     .order("created_at", { ascending: false });
 
   const requestsWithLinks = await Promise.all(
