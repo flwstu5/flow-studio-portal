@@ -68,11 +68,19 @@ export default async function RequestsPage() {
                     {r.type} · {formatDate(r.created_at)}
                   </p>
                 </div>
-                <span
-                  className={`text-xs font-medium px-2.5 py-1 rounded ${statusStyles[r.status] ?? "bg-neutral-100 text-neutral-600"}`}
-                >
-                  {statusLabels[r.status] ?? r.status}
-                </span>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <span
+                    className={`text-xs font-medium px-2.5 py-1 rounded ${statusStyles[r.status] ?? "bg-neutral-100 text-neutral-600"}`}
+                  >
+                    {statusLabels[r.status] ?? r.status}
+                  </span>
+                  <Link
+                    href={requestAgainHref(r)}
+                    className="text-xs font-medium text-neutral-500 border border-neutral-300 rounded px-2.5 py-1"
+                  >
+                    Request again
+                  </Link>
+                </div>
               </div>
             ))
           ) : (
@@ -89,4 +97,13 @@ export default async function RequestsPage() {
 function formatDate(value) {
   if (!value) return "—";
   return new Date(value).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
+
+function requestAgainHref(request) {
+  const params = new URLSearchParams({
+    title: request.title ?? "",
+    type: request.type ?? "flyer",
+    brief: request.brief ?? "",
+  });
+  return `/dashboard/new-request?${params.toString()}`;
 }

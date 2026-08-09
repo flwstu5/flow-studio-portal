@@ -74,11 +74,19 @@ export default async function RequestDetailPage({ params }) {
         ← Back to dashboard
       </Link>
 
-      <div className="mt-4 mb-6">
-        <h1 className="text-lg font-medium">{request.title}</h1>
-        <p className="text-xs text-neutral-500 mt-1 capitalize">
-          {request.type} · {request.status.replace("_", " ")}
-        </p>
+      <div className="mt-4 mb-6 flex items-start justify-between gap-3">
+        <div>
+          <h1 className="text-lg font-medium">{request.title}</h1>
+          <p className="text-xs text-neutral-500 mt-1 capitalize">
+            {request.type} · {request.status.replace("_", " ")}
+          </p>
+        </div>
+        <Link
+          href={requestAgainHref(request)}
+          className="text-xs font-medium text-neutral-500 border border-neutral-300 rounded px-2.5 py-1 flex-shrink-0"
+        >
+          Request again
+        </Link>
       </div>
 
       {request.brief && (
@@ -129,4 +137,13 @@ export default async function RequestDetailPage({ params }) {
       />
     </main>
   );
+}
+
+function requestAgainHref(request) {
+  const params = new URLSearchParams({
+    title: request.title ?? "",
+    type: request.type ?? "flyer",
+    brief: request.brief ?? "",
+  });
+  return `/dashboard/new-request?${params.toString()}`;
 }

@@ -1,7 +1,14 @@
 import Link from "next/link";
 import { createRequest } from "./actions";
 
-export default function NewRequestPage() {
+const VALID_TYPES = new Set(["flyer", "logo", "brand", "web"]);
+
+export default async function NewRequestPage({ searchParams }) {
+  const params = (await searchParams) ?? {};
+  const prefillTitle = typeof params.title === "string" ? params.title : "";
+  const prefillType = VALID_TYPES.has(params.type) ? params.type : "flyer";
+  const prefillBrief = typeof params.brief === "string" ? params.brief : "";
+
   return (
     <main className="min-h-screen bg-white flex justify-center px-4 py-12">
       <div className="w-full max-w-md">
@@ -16,7 +23,9 @@ export default function NewRequestPage() {
 
         <h1 className="text-xl font-medium mb-1">New request</h1>
         <p className="text-sm text-neutral-500 mb-6">
-          Tell us what you need — we'll pick it up from here.
+          {prefillBrief
+            ? "Prefilled from a past request — edit anything before sending."
+            : "Tell us what you need — we'll pick it up from here."}
         </p>
 
         <form action={createRequest} className="flex flex-col gap-4" encType="multipart/form-data">
@@ -28,6 +37,7 @@ export default function NewRequestPage() {
               name="title"
               type="text"
               required
+              defaultValue={prefillTitle}
               placeholder="e.g. Weekend brunch flyer"
               className="border border-neutral-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand-light)]"
             />
@@ -39,7 +49,7 @@ export default function NewRequestPage() {
             </label>
             <select
               name="type"
-              defaultValue="flyer"
+              defaultValue={prefillType}
               className="border border-neutral-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand-light)] bg-white"
             >
               <option value="flyer">Flyer</option>
@@ -57,6 +67,7 @@ export default function NewRequestPage() {
               name="brief"
               required
               rows={5}
+              defaultValue={prefillBrief}
               placeholder="What's this for? Include dates, sizes, wording, or anything else we should know."
               className="border border-neutral-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand-light)] resize-none"
             />
