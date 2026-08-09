@@ -252,6 +252,65 @@ export async function setReferralReward(referralId, rewardStatus) {
   revalidatePath("/staff/referrals");
 }
 
+export async function createStaffTask(title, { notes, dueDate } = {}) {
+  await assertIsStaff();
+
+  if (!title || !title.trim()) {
+    throw new Error("Title is required.");
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const admin = createAdminClient();
+
+  const { error } = await admin.from("staff_tasks").insert({
+    title: title.trim(),
+    notes: notes || null,
+    due_date: dueDate || null,
+    created_by: user?.email ?? null,
+  });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  revalidatePath("/staff/tasks");
+}
+
+export async function toggleStaffTask(taskId, done) {
+  await assertIsStaff();
+
+  const admin = createAdminClient();
+
+  const { error } = await admin
+    .from("staff_tasks")
+    .update({ done, completed_at: done ? new Date().toISOString() : null })
+    .eq("id", taskId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  revalidatePath("/staff/tasks");
+}
+
+export async function deleteStaffTask(taskId) {
+  await assertIsStaff();
+
+  const admin = createAdminClient();
+
+  const { error } = await admin.from("staff_tasks").delete().eq("id", taskId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  revalidatePath("/staff/tasks");
+}
+
 export async function sendCheckIn(clientId) {
   await assertIsStaff();
 
